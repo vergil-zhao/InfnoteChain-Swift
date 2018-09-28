@@ -40,6 +40,10 @@ class Blockchain {
         return storage.block(ofChain: self, byHeight: height)
     }
     
+    subscript(hash: String) -> Block? {
+        return storage.block(ofChain: self, byHash: hash)
+    }
+    
     // TODO: check if data is a valid json
     func addSignedBlock(from data: Data) {
         addSignedBlock(from: try! JSONSerialization.jsonObject(with: data) as! [String: Any])

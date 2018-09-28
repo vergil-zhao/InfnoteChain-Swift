@@ -31,7 +31,7 @@ class DatabaseStorage: Storage {
     }
     
     func block(ofChain chain: Blockchain, byHash hash: String) -> Block? {
-        return database.objects(Block.self).filter("chainID = \(chain.id) AND blockHash == \(hash)").first
+        return database.objects(Block.self).filter("chainID = \(chain.id) AND blockHash == \(Data(base58: hash)!)").first
     }
     
     func height(ofChain chain: Blockchain) -> Int {
