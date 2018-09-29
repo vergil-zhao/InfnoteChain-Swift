@@ -7,11 +7,14 @@
 
 import Foundation
 
+let VERSION = "0.1"
+
 class Blockchain {
     
     let key: Key
     let id: String
     let storage: Storage
+    let version: String
     
     var height: Int {
         return storage.height(ofChain: self)
@@ -25,15 +28,18 @@ class Blockchain {
         return self.init(key: try! Key())
     }
     
-    convenience init(publicKey: String) {
-        self.init(key: try! Key(publicKey: publicKey))
+    convenience init(publicKey: String, version: String = VERSION) {
+        self.init(key: try! Key(publicKey: publicKey), version: version)
     }
     
-    required init(key: Key) {
+    required init(key: Key, version: String = VERSION) {
         self.key = key
         self.id = key.publicKey.base58
+        self.version = version
         
         storage = DatabaseStorage()
+        
+        save()
     }
     
     subscript(height: Int) -> Block? {
@@ -75,6 +81,13 @@ class Blockchain {
         }
         
         return nil
+    }
+    
+    func save() {
+        let storage = ChainMetaStorage()
+        if storage.get(chain: id) == nil {
+            storage.add(chain: self)
+        }
     }
     
     func validate(block: Block) -> Bool {

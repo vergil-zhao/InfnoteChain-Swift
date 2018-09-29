@@ -131,40 +131,36 @@ class Block: Object {
     }
 }
 
-class KeyStorage {
+class ChainMetaStorage {
     
-    class KeyObject: Object {
+    class ChainObject: Object {
+        @objc dynamic var version: String = VERSION
         @objc dynamic var publicKey: String = ""
         @objc dynamic var privateKey: String? = nil
+        
+        var key: Key {
+            if let sk = privateKey {
+                return try! Key(privateKey: sk)
+            }
+            return try! Key(publicKey: publicKey)
+        }
     }
     
     let database = try! Realm()
     
-    var allKeys: [Key] {
-        var keys: [Key] = []
-        for object in database.objects(KeyObject.self) {
-            if let sk = object.privateKey {
-                keys.append(try! Key(privateKey: sk))
-            }
-            keys.append(try! Key(publicKey: object.publicKey))
-        }
-        return keys
+    var allChains: Results<ChainObject> {
+        return database.objects(ChainObject.self)
     }
     
-    func get(key pk: String) -> Key? {
-        if let object = database.objects(KeyObject.self).filter("publicKey == '\(pk)'").first {
-            if let sk = object.privateKey {
-                return try! Key(privateKey: sk)
-            }
-            return try! Key(publicKey: object.publicKey)
-        }
-        return nil
+    func get(chain id: String) -> ChainObject? {
+        return database.objects(ChainObject.self).filter("publicKey == '\(id)'").first
     }
     
-    func add(key: Key) {
-        let object = KeyObject()
-        object.publicKey = key.publicKey.base58
-        object.privateKey = key.privateKey?.base58
+    func add(chain: Blockchain) {
+        let object = ChainObject()
+        object.publicKey = chain.key.publicKey.base58
+        object.privateKey = chain.key.privateKey?.base58
+        object.version = chain.version
         
         try! database.write {
             database.add(object)
