@@ -7,66 +7,69 @@
 
 import Foundation
 
-let VERSION = "0.1"
-
-class Blockchain {
+open class Blockchain {
     
-    let key: Key
-    let id: String
-    let storage: Storage
-    let version: String
+    open let key: Key
+    open let id: String
+    open let storage: Storage
     
-    var height: Int {
+    var _info: [String: Any]?
+    open var info: [String: Any]? {
+        if _info != nil {
+            return _info
+        }
+        if let block = self[0], let info = try? JSONSerialization.jsonObject(with: block.payload, options: []) as? [String: Any] {
+            _info = info
+            return info
+        }
+        return nil
+    }
+    
+    open var height: Int {
         return storage.height(ofChain: self)
     }
     
-    var isOwner: Bool {
+    open var isOwner: Bool {
         return key.canSign
     }
     
-    class func create() -> Self {
-        return self.init(key: try! Key())
+    public convenience init(publicKey: String) {
+        self.init(key: try! Key(publicKey: publicKey))
     }
     
-    convenience init(publicKey: String, version: String = VERSION) {
-        self.init(key: try! Key(publicKey: publicKey), version: version)
-    }
-    
-    required init(key: Key, version: String = VERSION) {
+    required public init(key: Key) {
         self.key = key
         self.id = key.publicKey.base58
-        self.version = version
         
         storage = DatabaseStorage()
-        
         save()
     }
     
-    subscript(height: Int) -> Block? {
+    open subscript(height: Int) -> Block? {
         return storage.block(ofChain: self, byHeight: height)
     }
     
-    subscript(hash: String) -> Block? {
+    open subscript(hash: String) -> Block? {
         return storage.block(ofChain: self, byHash: hash)
     }
     
     // TODO: check if data is a valid json
-    func addSignedBlock(from data: Data) {
+    open func addSignedBlock(from data: Data) {
         addSignedBlock(from: try! JSONSerialization.jsonObject(with: data) as! [String: Any])
     }
     
-    func addSignedBlock(from data: [String: Any]) {
+    open func addSignedBlock(from data: [String: Any]) {
         let block = Block(dict: data)
-        addSignedBlock(block: block)
+        addSignedBlock(block)
     }
     
-    func addSignedBlock(block: Block) {
+    open func addSignedBlock(_ block: Block) {
         if validate(block: block) && self[block.height] == nil {
             storage.add(block: block)
         }
     }
     
-    func createBlock(withPayload payload: Data) -> Block? {
+    open func createBlock(withPayload payload: Data) -> Block? {
         if key.canSign {
             let block = Block()
             if height != 0 {
@@ -75,24 +78,24 @@ class Blockchain {
             block.chainID = id
             block.height = height
             block.payload = payload
-            block.blockHash = block.dataForHashing.sha256
-            block.signature = try! key.sign(data: block.blockHash)
+            block.blockHash = block.dataForHashing.sha256.base58
+            block.signature = try! key.sign(base58Data: block.blockHash).base58
             return block
         }
         
         return nil
     }
     
-    func save() {
-        let storage = ChainMetaStorage()
+    open func save() {
+        let storage = ChainManager()
         if storage.get(chain: id) == nil {
             storage.add(chain: self)
         }
     }
     
-    func validate(block: Block) -> Bool {
-        return (block.height == 0 || block.prevHash != Data())
-            && block.dataForHashing.sha256 == block.blockHash
-            && key.verify(data: block.blockHash, signature: block.signature)
+    open func validate(block: Block) -> Bool {
+        return (block.height == 0 || !block.prevHash.isEmpty)
+            && block.dataForHashing.sha256.base58 == block.blockHash
+            && key.verify(base58Data: block.blockHash, signture: block.signature)
     }
 }

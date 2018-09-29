@@ -9,56 +9,56 @@ import Foundation
 import RealmSwift
 
 
-protocol Storage {
+public protocol Storage {
     func add(block: Block)
     func block(ofChain chain: Blockchain, byHeight height: Int) -> Block?
     func block(ofChain chain: Blockchain, byHash hash: String) -> Block?
     func height(ofChain chain: Blockchain) -> Int
 }
 
-class DatabaseStorage: Storage {
+open class DatabaseStorage: Storage {
     private let database: Realm
     private var filterResultCache: [String: Results<Block>] = [:]
     
     init() {
         database = try! Realm()
         
-        debugPrint("Realm is located at:", database.configuration.fileURL!)
+        print("Realm is located at:", database.configuration.fileURL!)
     }
     
-    func block(ofChain chain: Blockchain, byHeight height: Int) -> Block? {
-        return database.objects(Block.self).filter("chainID = \(chain.id) AND height == \(height)").first
+    open func block(ofChain chain: Blockchain, byHeight height: Int) -> Block? {
+        return database.objects(Block.self).filter("chainID == '\(chain.id)' AND height == \(height)").first
     }
     
-    func block(ofChain chain: Blockchain, byHash hash: String) -> Block? {
-        return database.objects(Block.self).filter("chainID = \(chain.id) AND blockHash == \(Data(base58: hash)!)").first
+    open func block(ofChain chain: Blockchain, byHash hash: String) -> Block? {
+        return database.objects(Block.self).filter("chainID == '\(chain.id)' AND blockHash == '\(hash)'").first
     }
     
-    func height(ofChain chain: Blockchain) -> Int {
+    open func height(ofChain chain: Blockchain) -> Int {
         if let result = filterResultCache[chain.id] {
             return result.count
         }
         
-        filterResultCache[chain.id] = database.objects(Block.self).filter("chainID == \(chain.id)")
+        filterResultCache[chain.id] = database.objects(Block.self).filter("chainID == '\(chain.id)'")
         return filterResultCache[chain.id]!.count
     }
     
-    func add(block: Block) {
+    open func add(block: Block) {
         try! database.write {
             database.add(block)
         }
     }
 }
 
-class Block: Object {
+open class Block: Object {
     
     // block hash is a hash value of minimized(no space), sorted-keys, uft8 content json data
-    @objc dynamic var blockHash: Data   = Data()
-    @objc dynamic var prevHash: Data    = Data()
+    @objc dynamic var blockHash: String   = ""
+    @objc dynamic var prevHash: String    = ""
     
     // it should be a timestamp when hashing
     @objc dynamic var time: Date        = Date()
-    @objc dynamic var signature: Data   = Data()
+    @objc dynamic var signature: String   = ""
     
     // chain id is base58 encoded public key of chain owner
     @objc dynamic var chainID: String   = ""
@@ -67,33 +67,33 @@ class Block: Object {
     // it also needs to be a minimized(no space), sorted-keys, uft8 content json data
     @objc dynamic var payload: Data     = Data()
     
-    var isGenesis: Bool {
+    open var isGenesis: Bool {
         return height == 0
     }
     
-    var dict: [String: Any] {
+    open var dict: [String: Any] {
         var dict = [
-            "signature": signature.base58,
-            "hash": blockHash.base58,
+            "signature": signature,
+            "hash": blockHash,
             "time": Int(time.timeIntervalSince1970),
             "chain_id": chainID,
             "height": height,
             "payload": String(data: payload, encoding: .utf8)
             ] as [String: Any]
         if !isGenesis {
-            dict["prev_hash"] = prevHash.base58
+            dict["prev_hash"] = prevHash
         }
         return dict
     }
     
-    var dataForHashing: Data {
+    open var dataForHashing: Data {
         var dict = self.dict
         dict["hash"] = nil
         dict["signature"] = nil
         return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
     }
     
-    var data: Data {
+    open var data: Data {
         return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
     }
     
@@ -101,29 +101,24 @@ class Block: Object {
     convenience init(dict: [String: Any]) {
         self.init()
         
-        blockHash = Data(base58: dict["hash"] as! String)!
-        prevHash = Data(base58: dict["prev_hash"] as! String)!
+        blockHash = dict["hash"] as! String
+        prevHash = dict["prev_hash"] as! String
         time = Date(timeIntervalSince1970: TimeInterval(dict["time"] as! Int))
-        signature = Data(base58: dict["signature"] as! String)!
+        signature = dict["signature"] as! String
         chainID = dict["chain_id"] as! String
         height = dict["height"] as! Int
         payload = Data(base58: dict["payload"] as! String)!
-        
     }
     
-    override static func primaryKey() -> String? {
+    override open static func primaryKey() -> String? {
         return "blockHash"
     }
     
-    override static func indexedProperties() -> [String] {
+    override open static func indexedProperties() -> [String] {
         return ["chainID", "height"]
     }
     
-    override static func ignoredProperties() -> [String] {
-        return ["chain"]
-    }
-    
-    override var description: String {
+    override open var description: String {
         let jsonData = try! JSONSerialization.data(
             withJSONObject: dict,
             options: [.sortedKeys, .prettyPrinted])
@@ -131,39 +126,64 @@ class Block: Object {
     }
 }
 
-class ChainMetaStorage {
+open class ChainObject: Object {
+    @objc dynamic var publicKey: String = ""
+    @objc dynamic var privateKey: String? = nil
     
-    class ChainObject: Object {
-        @objc dynamic var version: String = VERSION
-        @objc dynamic var publicKey: String = ""
-        @objc dynamic var privateKey: String? = nil
-        
-        var key: Key {
-            if let sk = privateKey {
-                return try! Key(privateKey: sk)
-            }
-            return try! Key(publicKey: publicKey)
+    open var key: Key {
+        if let sk = privateKey {
+            return try! Key(privateKey: sk)
         }
+        return try! Key(publicKey: publicKey)
     }
+    
+    open var chain: Blockchain {
+        return Blockchain(key: key)
+    }
+    
+    override open static func primaryKey() -> String? {
+        return "publicKey"
+    }
+}
+
+open class ChainManager {
     
     let database = try! Realm()
     
-    var allChains: Results<ChainObject> {
+    public init() {}
+    
+    open var allChains: Results<ChainObject> {
         return database.objects(ChainObject.self)
     }
     
-    func get(chain id: String) -> ChainObject? {
+    open func get(chain id: String) -> ChainObject? {
         return database.objects(ChainObject.self).filter("publicKey == '\(id)'").first
     }
     
-    func add(chain: Blockchain) {
+    open func add(chain: Blockchain) {
         let object = ChainObject()
         object.publicKey = chain.key.publicKey.base58
         object.privateKey = chain.key.privateKey?.base58
-        object.version = chain.version
         
         try! database.write {
             database.add(object)
+        }
+    }
+    
+    open func create(chain info: [String: Any]) -> Blockchain {
+        let chain = Blockchain(key: try! Key())
+        if let block = chain.createBlock(withPayload: try! JSONSerialization.data(withJSONObject: info, options: .sortedKeys)) {
+            chain.addSignedBlock(block)
+        }
+        return chain
+    }
+    
+    open func remove(chain: ChainObject) {
+        try! database.write {
+            for block in database.objects(Block.self).filter("chainID == '\(chain.publicKey)'") {
+                database.delete(block)
+            }
+            database.delete(chain)
         }
     }
 }

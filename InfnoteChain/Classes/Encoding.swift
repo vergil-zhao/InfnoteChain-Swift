@@ -9,7 +9,7 @@
 import Foundation
 import CommonCrypto
 
-extension Data {
+public extension Data {
     public init?(hex: String) {
         let len = hex.count / 2
         var data = Data(capacity: len)
@@ -33,15 +33,15 @@ extension Data {
         self = data
     }
     
-    public var base58: String {
+    open var base58: String {
         return Base58.encode(self)
     }
     
-    public var hex: String {
+    open var hex: String {
         return map { String(format: "%02hhx", $0) }.joined()
     }
     
-    public var sha256: Data {
+    open var sha256: Data {
         var hash = [UInt8](repeating: 0,  count: Int(CC_SHA256_DIGEST_LENGTH))
         withUnsafeBytes {
             _ = CC_SHA256($0, CC_LONG(count), &hash)
@@ -49,7 +49,7 @@ extension Data {
         return Data(bytes: hash)
     }
     
-    public var utf8: String? {
+    open var utf8: String? {
         return String(data: self, encoding: .utf8)
     }
 }

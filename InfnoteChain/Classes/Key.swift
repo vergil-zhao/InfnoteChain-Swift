@@ -8,17 +8,17 @@
 
 import UIKit
 
-class Key {
-    static let defaultTag = "com.infnote.keys.default"
-    static let keySizeInBits = 256
+open class Key {
+    open static let defaultTag = "com.infnote.keys.default"
+    open static let keySizeInBits = 256
     
-    enum ImportError: Error {
+    public enum ImportError: Error {
         case cannotExtractPublicKey
         case publicKeyParseFailed
         case privateKeyParseFailed
     }
     
-    enum KeyError: Error {
+    public enum KeyError: Error {
         case loadSecKeyItemFailed(Error)
         case saveSecKeyItemFailed(OSStatus)
         case signFailed(Error)
@@ -26,14 +26,14 @@ class Key {
         case onlyPublicKey
     }
 
-    let publicKey: SecKey
-    var privateKey: SecKey?
+    open let publicKey: SecKey
+    open var privateKey: SecKey?
     
-    var canSign: Bool {
+    open var canSign: Bool {
         return privateKey != nil
     }
     
-    class func loadDefaultKey() -> Key? {
+    open class func loadDefaultKey() -> Key? {
         var item: CFTypeRef?
         let status = SecItemCopyMatching([
             kSecClass as String: kSecClassKey,
@@ -48,7 +48,7 @@ class Key {
         return try? Key(privateKey: item as! SecKey)
     }
     
-    class func clean() {
+    open class func clean() {
         let attributes: [String: Any] = [
             kSecClass as String: kSecClassKey,
             kSecAttrApplicationTag as String: defaultTag,
@@ -58,7 +58,7 @@ class Key {
         SecItemDelete(attributes as CFDictionary)
     }
     
-    init() throws {
+    public init() throws {
         let attributes: [String: Any] =
             [kSecAttrKeyType as String:            kSecAttrKeyTypeECSECPrimeRandom,
              kSecAttrKeySizeInBits as String:      Key.keySizeInBits,
@@ -77,11 +77,11 @@ class Key {
     }
     
     // TODO: check if base58 string is valid
-    convenience init(privateKey: String) throws {
+    public convenience init(privateKey: String) throws {
         try self.init(privateKey: Data(base58: privateKey)!)
     }
     
-    convenience init(privateKey: Data) throws {
+    public convenience init(privateKey: Data) throws {
         let query: [String: Any] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
@@ -98,11 +98,11 @@ class Key {
     }
     
     // TODO: check if base58 string is valid
-    convenience init(publicKey: String) throws {
+    public convenience init(publicKey: String) throws {
         try self.init(publicKey: Data(base58: publicKey)!)
     }
     
-    convenience init(publicKey: Data) throws {
+    public convenience init(publicKey: Data) throws {
         let query: [String: Any] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
@@ -118,7 +118,7 @@ class Key {
         try self.init(publicKey: key)
     }
     
-    init(privateKey: SecKey) throws {
+    public init(privateKey: SecKey) throws {
         self.privateKey = privateKey
         guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
             throw ImportError.cannotExtractPublicKey
@@ -126,11 +126,11 @@ class Key {
         self.publicKey = publicKey
     }
     
-    init(publicKey: SecKey) throws {
+    public init(publicKey: SecKey) throws {
         self.publicKey = publicKey
     }
     
-    func save() throws {
+    open func save() throws {
         Key.clean()
         
         let status = SecItemAdd([
@@ -143,11 +143,12 @@ class Key {
         }
     }
     
-    func sign(message: String) -> String {
-        return String(data: try! sign(data: message.data(using: .utf8)!), encoding: .utf8)!
+    // TODO: check if they are valid base58 string
+    open func sign(base58Data message: String) -> Data {
+        return try! sign(data: Data(base58: message)!)
     }
     
-    func sign(data: Data) throws -> Data {
+    open func sign(data: Data) throws -> Data {
         guard let privateKey = self.privateKey else {
             throw KeyError.onlyPublicKey
         }
@@ -163,29 +164,34 @@ class Key {
         return signature
     }
     
-    func verify(data: Data, signature: Data) -> Bool {
+    // TODO: check if they are valid base58 string
+    open func verify(base58Data message: String, signture: String) -> Bool {
+        return verify(data: Data(base58: message)!, signature: Data(base58: signture)!)
+    }
+    
+    open func verify(data: Data, signature: Data) -> Bool {
         return publicKey.verify(message: data, signature: signature)
     }
 }
 
 
-extension SecKey {
+public extension SecKey {
     
     // TODO: Add attribute judgement to avoid exceptions
-    var data: Data {
+    open var data: Data {
         return SecKeyCopyExternalRepresentation(self, nil)! as Data
     }
     
-    var hex: String {
+    open var hex: String {
         return data.hex
     }
     
-    var base58: String {
+    open var base58: String {
         return data.base58
     }
     
     // TODO: Add attribute judgement & remove print
-    func verify(message: Data, signature: Data) -> Bool {
+    open func verify(message: Data, signature: Data) -> Bool {
         var error: Unmanaged<CFError>?
         guard SecKeyVerifySignature(self,
                                     .ecdsaSignatureMessageX962SHA256,
