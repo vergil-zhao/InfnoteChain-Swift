@@ -52,16 +52,6 @@ open class Blockchain {
         return manager.block(ofChain: id, byHash: hash)
     }
     
-    // TODO: check if data is a valid json
-    open func addSignedBlock(from data: Data) {
-        addSignedBlock(from: try! JSONSerialization.jsonObject(with: data) as! [String: Any])
-    }
-    
-    open func addSignedBlock(from data: [String: Any]) {
-        let block = Block(dict: data)
-        manager.add(block: block)
-    }
-    
     open func createBlock(withPayload payload: Data) -> Block? {
         if key.canSign {
             let block = Block()

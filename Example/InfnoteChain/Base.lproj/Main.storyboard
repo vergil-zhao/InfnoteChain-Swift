@@ -108,7 +108,7 @@
                         </connections>
                     </tableView>
                     <navigationItem key="navigationItem" id="ecL-pV-vgU">
-                        <barButtonItem key="rightBarButtonItem" enabled="NO" systemItem="add" id="xpm-Ot-bOe">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="xpm-Ot-bOe">
                             <connections>
                                 <segue destination="jXR-L5-sAO" kind="presentation" identifier="add" id="qf8-jX-Ae7"/>
                             </connections>
@@ -119,7 +119,7 @@
             </objects>
             <point key="canvasLocation" x="1470" y="536"/>
         </scene>
-        <!--New Block-->
+        <!--Create Block-->
         <scene sceneID="bLC-pK-8kX">
             <objects>
                 <tableViewController id="cKL-62-yzf" customClass="NewBlockViewController" customModule="InfnoteChain_Example" customModuleProvider="target" sceneMemberID="viewController">
@@ -128,7 +128,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" cocoaTouchSystemColor="groupTableViewBackgroundColor"/>
                         <sections>
-                            <tableViewSection headerTitle="Payload" id="TPh-vF-rII">
+                            <tableViewSection headerTitle="JSON" id="TPh-vF-rII">
                                 <cells>
                                     <tableViewCell clipsSubviews="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" selectionStyle="blue" hidesAccessoryWhenEditing="NO" indentationLevel="1" indentationWidth="0.0" id="g3P-9p-7Ej" customClass="CommonInfoCell" customModule="InfnoteChain_Example" customModuleProvider="target">
                                         <rect key="frame" x="0.0" y="55.333333333333343" width="414" height="44"/>
@@ -201,7 +201,7 @@
                             <outlet property="delegate" destination="cKL-62-yzf" id="enL-Dh-d33"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="New Block" largeTitleDisplayMode="never" id="5Cf-HF-tzQ">
+                    <navigationItem key="navigationItem" title="Create Block" largeTitleDisplayMode="never" id="5Cf-HF-tzQ">
                         <barButtonItem key="leftBarButtonItem" systemItem="cancel" id="wni-0B-IZg">
                             <connections>
                                 <action selector="cancelButtonTouched:" destination="cKL-62-yzf" id="Kmh-s0-iPf"/>
@@ -209,6 +209,7 @@
                         </barButtonItem>
                     </navigationItem>
                     <connections>
+                        <outlet property="createButton" destination="i6z-RB-G2L" id="rmh-US-vS7"/>
                         <outlet property="textView" destination="Nj2-Vg-Tz5" id="sZz-t8-ViZ"/>
                         <outlet property="textViewHeightConstraint" destination="Q9L-E8-T6R" id="Qnu-Ik-vog"/>
                     </connections>
@@ -217,7 +218,7 @@
             </objects>
             <point key="canvasLocation" x="2412" y="1250"/>
         </scene>
-        <!--Block Detail View Controller-->
+        <!--Block Detail-->
         <scene sceneID="1OV-dy-WIV">
             <objects>
                 <tableViewController storyboardIdentifier="BlockDetail" id="DGT-Uw-v9X" customClass="BlockDetailViewController" customModule="InfnoteChain_Example" customModuleProvider="target" sceneMemberID="viewController">
@@ -262,7 +263,7 @@
                             <outlet property="delegate" destination="DGT-Uw-v9X" id="DQ2-Ba-mVG"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" largeTitleDisplayMode="never" id="aw9-xe-SzP"/>
+                    <navigationItem key="navigationItem" title="Block Detail" largeTitleDisplayMode="never" id="aw9-xe-SzP"/>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ud9-4T-ri4" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

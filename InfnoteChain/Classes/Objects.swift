@@ -101,8 +101,13 @@ open class Block: Object {
             && key.verify(base58Data: blockHash, signture: signature)
     }
     
+    // TODO: check data
+    public convenience init(jsonData data: Data) {
+        self.init(dict: try! JSONSerialization.jsonObject(with: data, options: []) as! [String: Any])
+    }
+    
     // TODO: validate dict
-    convenience init(dict: [String: Any]) {
+    public convenience init(dict: [String: Any]) {
         self.init()
         
         blockHash = dict["hash"] as! String

@@ -13,12 +13,17 @@ class NewBlockViewController: UITableViewController, UITextViewDelegate {
     
     @IBOutlet weak var textViewHeightConstraint: NSLayoutConstraint!
     @IBOutlet weak var textView: UITextView!
+    @IBOutlet weak var createButton: UIButton!
     
-    var chain: Blockchain?
+    var chain: Blockchain!
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        if !chain.key.canSign {
+            navigationItem.title = "Add Signed Block"
+            createButton.setTitle("ADD", for: .normal)
+        }
     }
     
     func textViewDidChange(_ textView: UITextView) {
@@ -30,8 +35,16 @@ class NewBlockViewController: UITableViewController, UITextViewDelegate {
     }
 
     @IBAction func createButtonTouched(_ sender: Any) {
-        if !textView.text.isEmpty {
-            let block = chain?.createBlock(withPayload: textView.text.data(using: .utf8)!)
+        if !textView.text.isEmpty{
+            var block: Block? = nil
+            
+            if chain.key.canSign {
+                block = chain.createBlock(withPayload: textView.text.data(using: .utf8)!)
+            }
+            else {
+                block = Block(jsonData: textView.text.data(using: .utf8)!)
+            }
+            
             let controller = storyboard?.instantiateViewController(withIdentifier: "BlockDetail") as! BlockDetailViewController
             controller.block = block
             controller.isConfirmable = true

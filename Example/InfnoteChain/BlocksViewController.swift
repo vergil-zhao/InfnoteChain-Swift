@@ -18,10 +18,6 @@ class BlocksViewController: UITableViewController {
         
         tableView.tableFooterView = UIView()
         
-        if chain.key.canSign {
-            navigationItem.rightBarButtonItem?.isEnabled = true
-        }
-        
     }
     
     override func viewDidAppear(_ animated: Bool) {
