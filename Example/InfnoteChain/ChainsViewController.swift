@@ -72,4 +72,13 @@ class ChainsViewController: UITableViewController {
             present(alert, animated: true)
         }
     }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "chain_detail" {
+            let controller = segue.destination as! BlocksViewController
+            controller.title = tableView.cellForRow(at: tableView.indexPathForSelectedRow!)!.textLabel!.text
+            controller.chain = manager.allChains[tableView.indexPathForSelectedRow!.row].chain
+        }
+    }
 }
+

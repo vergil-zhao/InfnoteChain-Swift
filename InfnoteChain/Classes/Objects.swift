@@ -42,19 +42,19 @@ open class ChainObject: Object {
 open class Block: Object {
     
     // block hash is a hash value of minimized(no space), sorted-keys, uft8 content json data
-    @objc dynamic var blockHash: String   = ""
-    @objc dynamic var prevHash: String    = ""
+    @objc public dynamic var blockHash: String   = ""
+    @objc public dynamic var prevHash: String    = ""
     
     // it should be a timestamp when hashing
-    @objc dynamic var time: Date        = Date()
-    @objc dynamic var signature: String   = ""
+    @objc public dynamic var time: Date          = Date()
+    @objc public dynamic var signature: String   = ""
     
     // chain id is base58 encoded public key of chain owner
-    @objc dynamic var chainID: String   = ""
-    @objc dynamic var height: Int       = 0
+    @objc public dynamic var chainID: String   = ""
+    @objc public dynamic var height: Int       = 0
     
     // it also needs to be a minimized(no space), sorted-keys, uft8 content json data
-    @objc dynamic var payload: Data     = Data()
+    @objc public dynamic var payload: Data     = Data()
     
     open var isGenesis: Bool {
         return height == 0
@@ -92,6 +92,13 @@ open class Block: Object {
     
     open var data: Data {
         return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
+    }
+    
+    open var isValid: Bool {
+        let key = try! Key(publicKey: chainID)
+        return (height == 0 || !prevHash.isEmpty)
+            && dataForHashing.sha256.base58 == blockHash
+            && key.verify(base58Data: blockHash, signture: signature)
     }
     
     // TODO: validate dict

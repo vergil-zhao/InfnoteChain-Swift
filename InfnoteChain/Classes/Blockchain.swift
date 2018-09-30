@@ -59,13 +59,7 @@ open class Blockchain {
     
     open func addSignedBlock(from data: [String: Any]) {
         let block = Block(dict: data)
-        addSignedBlock(block)
-    }
-    
-    open func addSignedBlock(_ block: Block) {
-        if validate(block: block) && self[block.height] == nil {
-            manager.add(block: block)
-        }
+        manager.add(block: block)
     }
     
     open func createBlock(withPayload payload: Data) -> Block? {
@@ -90,11 +84,5 @@ open class Blockchain {
         if storage.get(chain: id) == nil {
             storage.add(chain: self)
         }
-    }
-    
-    open func validate(block: Block) -> Bool {
-        return (block.height == 0 || !block.prevHash.isEmpty)
-            && block.dataForHashing.sha256.base58 == block.blockHash
-            && key.verify(base58Data: block.blockHash, signture: block.signature)
     }
 }

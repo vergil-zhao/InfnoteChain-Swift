@@ -40,7 +40,7 @@ open class ChainManager {
     open func create(chain info: [String: Any]) -> Blockchain {
         let chain = Blockchain(key: try! Key())
         if let block = chain.createBlock(withPayload: try! JSONSerialization.data(withJSONObject: info, options: .sortedKeys)) {
-            chain.addSignedBlock(block)
+            add(block: block)
         }
         return chain
     }
@@ -74,8 +74,18 @@ open class ChainManager {
     }
     
     open func add(block: Block) {
-        try! database.write {
-            database.add(block)
+        let result = self.block(ofChain: block.chainID, byHeight: block.height)
+        if block.isValid && result == nil {
+            try! database.write {
+                database.add(block)
+            }
         }
+    }
+    
+    // MARK: - Debug
+    
+    open var storageFileURL: URL {
+        print("Realm is located at:", database.configuration.fileURL!)
+        return database.configuration.fileURL!
     }
 }
