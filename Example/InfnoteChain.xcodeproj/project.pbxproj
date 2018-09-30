@@ -12,6 +12,7 @@
 		44A7D7B221608E8B00CC9975 /* BlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */; };
 		44A7D7B42160A33D00CC9975 /* BlockDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */; };
 		44A7D7B62160AE6500CC9975 /* NewBlockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */; };
+		44A7D7B82160CA5B00CC9975 /* AddChainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */; };
 		44F8CC66215F633000610E84 /* ChainsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F8CC65215F633000610E84 /* ChainsViewController.swift */; };
 		607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 607FACD51AFB9204008FA782 /* AppDelegate.swift */; };
 		607FACDB1AFB9204008FA782 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 607FACD91AFB9204008FA782 /* Main.storyboard */; };
@@ -39,6 +40,7 @@
 		44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlocksViewController.swift; sourceTree = "<group>"; };
 		44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDetailViewController.swift; sourceTree = "<group>"; };
 		44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewBlockViewController.swift; sourceTree = "<group>"; };
+		44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddChainViewController.swift; sourceTree = "<group>"; };
 		44F8CC65215F633000610E84 /* ChainsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChainsViewController.swift; sourceTree = "<group>"; };
 		607FACD01AFB9204008FA782 /* InfnoteChain_Example.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = InfnoteChain_Example.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		607FACD41AFB9204008FA782 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -115,6 +117,7 @@
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
 				44F8CC65215F633000610E84 /* ChainsViewController.swift */,
 				44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */,
+				44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */,
 				44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */,
 				44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */,
 				44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */,
@@ -367,6 +370,7 @@
 				44A7D7B62160AE6500CC9975 /* NewBlockViewController.swift in Sources */,
 				44A7D7B221608E8B00CC9975 /* BlocksViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
+				44A7D7B82160CA5B00CC9975 /* AddChainViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -520,7 +524,7 @@
 				INFOPLIST_FILE = InfnoteChain/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = org.cocoapods.demo.infnote.chain;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infnote.chain.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.2;
@@ -536,7 +540,7 @@
 				INFOPLIST_FILE = InfnoteChain/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				MODULE_NAME = ExampleApp;
-				PRODUCT_BUNDLE_IDENTIFIER = org.cocoapods.demo.infnote.chain;
+				PRODUCT_BUNDLE_IDENTIFIER = com.infnote.chain.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_SWIFT3_OBJC_INFERENCE = Default;
 				SWIFT_VERSION = 4.2;

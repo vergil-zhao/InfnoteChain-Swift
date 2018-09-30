@@ -25,6 +25,24 @@ class ChainsViewController: UITableViewController {
         tableView.reloadData()
     }
     
+    @IBAction func addButtonTouched(_ sender: Any) {
+        let alert = UIAlertController(title: "Add Chain", message: nil, preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "Add a exist chain", style: .default, handler: { _ in
+            self.navigationController?.pushViewController((self.storyboard?.instantiateViewController(withIdentifier: "add_chain"))!, animated: true)
+        }))
+        alert.addAction(UIAlertAction(title: "Create a new chain", style: .default, handler: { _ in
+            self.navigationController?.pushViewController((self.storyboard?.instantiateViewController(withIdentifier: "create_chain"))!, animated: true)
+        }))
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        present(alert, animated: true)
+    }
+    
+    @IBAction func debugButtonTouched(_ sender: Any) {
+        let alert = UIAlertController(title: "Realm is located at", message: manager.storageFileURL.absoluteString, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        present(alert, animated: true)
+    }
+    
     // MARK: - Table view data source
 
     override func numberOfSections(in tableView: UITableView) -> Int {
