@@ -11,7 +11,7 @@ import InfnoteChain
 
 class ChainsViewController: UITableViewController {
     
-    let manager = ChainManager()
+    let manager = ChainManager.shared
 
     override func viewDidLoad() {
         super.viewDidLoad()

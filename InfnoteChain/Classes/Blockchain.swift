@@ -11,7 +11,7 @@ open class Blockchain {
     
     open let key: Key
     open let id: String
-    open let storage: Storage
+    open let manager = ChainManager.shared
     
     var _info: [String: Any]?
     open var info: [String: Any]? {
@@ -26,7 +26,7 @@ open class Blockchain {
     }
     
     open var height: Int {
-        return storage.height(ofChain: self)
+        return manager.height(ofChain: id)
     }
     
     open var isOwner: Bool {
@@ -40,17 +40,16 @@ open class Blockchain {
     required public init(key: Key) {
         self.key = key
         self.id = key.publicKey.base58
-        
-        storage = DatabaseStorage()
+
         save()
     }
     
     open subscript(height: Int) -> Block? {
-        return storage.block(ofChain: self, byHeight: height)
+        return manager.block(ofChain: id, byHeight: height)
     }
     
     open subscript(hash: String) -> Block? {
-        return storage.block(ofChain: self, byHash: hash)
+        return manager.block(ofChain: id, byHash: hash)
     }
     
     // TODO: check if data is a valid json
@@ -65,7 +64,7 @@ open class Blockchain {
     
     open func addSignedBlock(_ block: Block) {
         if validate(block: block) && self[block.height] == nil {
-            storage.add(block: block)
+            manager.add(block: block)
         }
     }
     
@@ -87,7 +86,7 @@ open class Blockchain {
     }
     
     open func save() {
-        let storage = ChainManager()
+        let storage = ChainManager.shared
         if storage.get(chain: id) == nil {
             storage.add(chain: self)
         }
