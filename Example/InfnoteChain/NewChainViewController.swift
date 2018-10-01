@@ -36,7 +36,7 @@ class NewChainViewController: UITableViewController, UITextFieldDelegate {
         if !descField.text.isEmpty {
             info["desc"] = descField.text
         }
-        let _ = ChainManager.shared.create(chain: info)
+        _ = ChainManager.shared.create(chain: info)
         
         navigationController?.popViewController(animated: true)
     }

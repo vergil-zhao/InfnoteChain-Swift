@@ -20,7 +20,7 @@ class NewBlockViewController: UITableViewController, UITextViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        if !chain.key.canSign {
+        if !chain.isOwner {
             navigationItem.title = "Add Signed Block"
             createButton.setTitle("ADD", for: .normal)
         }
@@ -38,7 +38,7 @@ class NewBlockViewController: UITableViewController, UITextViewDelegate {
         if !textView.text.isEmpty{
             var block: Block? = nil
             
-            if chain.key.canSign {
+            if chain.isOwner {
                 block = chain.createBlock(withPayload: textView.text.data(using: .utf8)!)
             }
             else {

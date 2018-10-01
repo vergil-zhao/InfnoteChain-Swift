@@ -62,7 +62,7 @@ open class Blockchain {
             block.height = height
             block.payload = payload
             block.blockHash = block.dataForHashing.sha256.base58
-            block.signature = try! key.sign(base58Data: block.blockHash).base58
+            block.signature = try! key.sign(data: block.dataForHashing).base58
             return block
         }
         

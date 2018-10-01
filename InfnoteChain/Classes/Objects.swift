@@ -98,7 +98,7 @@ open class Block: Object {
         let key = try! Key(publicKey: chainID)
         return (height == 0 || !prevHash.isEmpty)
             && dataForHashing.sha256.base58 == blockHash
-            && key.verify(base58Data: blockHash, signture: signature)
+            && key.verify(data: dataForHashing, signature: Data(base58: signature)!)
     }
     
     // TODO: check data

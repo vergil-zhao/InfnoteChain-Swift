@@ -143,11 +143,6 @@ open class Key {
         }
     }
     
-    // TODO: check if they are valid base58 string
-    open func sign(base58Data message: String) -> Data {
-        return try! sign(data: Data(base58: message)!)
-    }
-    
     open func sign(data: Data) throws -> Data {
         guard let privateKey = self.privateKey else {
             throw KeyError.onlyPublicKey
@@ -162,11 +157,6 @@ open class Key {
             throw KeyError.signFailed(error!.takeRetainedValue() as Error)
         }
         return signature
-    }
-    
-    // TODO: check if they are valid base58 string
-    open func verify(base58Data message: String, signture: String) -> Bool {
-        return verify(data: Data(base58: message)!, signature: Data(base58: signture)!)
     }
     
     open func verify(data: Data, signature: Data) -> Bool {
