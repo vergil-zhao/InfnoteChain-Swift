@@ -75,7 +75,7 @@ open class ChainManager {
     
     open func add(block: Block) {
         let result = self.block(ofChain: block.chainID, byHeight: block.height)
-        if block.isValid && result == nil {
+        if !block.isValid && result == nil {
             return
         }
         if block.height > 0, let prev = block.prev, prev.blockHash != block.prevHash {

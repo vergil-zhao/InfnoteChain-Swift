@@ -267,7 +267,13 @@
                             <outlet property="delegate" destination="DGT-Uw-v9X" id="DQ2-Ba-mVG"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Block Detail" largeTitleDisplayMode="never" id="aw9-xe-SzP"/>
+                    <navigationItem key="navigationItem" title="Block Detail" largeTitleDisplayMode="never" id="aw9-xe-SzP">
+                        <barButtonItem key="rightBarButtonItem" systemItem="action" id="nuW-pV-2m7">
+                            <connections>
+                                <action selector="exportButtonTouched:" destination="DGT-Uw-v9X" id="gcs-Uq-wx0"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                 </tableViewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ud9-4T-ri4" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

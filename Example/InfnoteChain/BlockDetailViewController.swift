@@ -31,6 +31,15 @@ class BlockDetailViewController: UITableViewController {
         ChainManager.shared.add(block: block)
         navigationController?.dismiss(animated: true)
     }
+    
+    @IBAction func exportButtonTouched(_ sender: Any) {
+        let content = String(data: block.data, encoding: .utf8)
+        UIPasteboard.general.string = content
+        let alert = UIAlertController(title: "Block #\(block.height) JSON copied in Pastboard", message: content, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        present(alert, animated: true)
+    }
+    
 
     // MARK: - Table view data source
 
