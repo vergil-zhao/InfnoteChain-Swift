@@ -90,6 +90,19 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		44A7D7D22168CF5700CC9975 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				44F8CC65215F633000610E84 /* ChainsViewController.swift */,
+				44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */,
+				44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */,
+				44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */,
+				44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */,
+				44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */,
+			);
+			name = Controllers;
+			sourceTree = "<group>";
+		};
 		607FACC71AFB9204008FA782 = {
 			isa = PBXGroup;
 			children = (
@@ -114,13 +127,8 @@
 		607FACD21AFB9204008FA782 /* Example for InfnoteChain */ = {
 			isa = PBXGroup;
 			children = (
+				44A7D7D22168CF5700CC9975 /* Controllers */,
 				607FACD51AFB9204008FA782 /* AppDelegate.swift */,
-				44F8CC65215F633000610E84 /* ChainsViewController.swift */,
-				44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */,
-				44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */,
-				44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */,
-				44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */,
-				44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */,
 				607FACD91AFB9204008FA782 /* Main.storyboard */,
 				607FACD31AFB9204008FA782 /* Supporting Files */,
 			);
@@ -345,12 +353,14 @@
 				"${BUILT_PRODUCTS_DIR}/InfnoteChain/InfnoteChain.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
+				"${BUILT_PRODUCTS_DIR}/Starscream/Starscream.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InfnoteChain.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
+				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Starscream.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

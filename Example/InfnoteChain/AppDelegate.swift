@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import InfnoteChain
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -15,6 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        
+        procedure()
+        
         return true
     }
 
@@ -43,3 +47,31 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 }
 
+func procedure() {
+    guard let peer = Peer(address: "echo.websocket.org") else {
+        return
+    }
+    Connection(peer)
+        .handled(by: ConnectionHandler
+            .onConnected { conn in
+                print("Success to connect host \(conn.peer.address).")
+                sendHello(conn)
+            }
+            .onDisconnected { e, conn in
+                print("Disconnected from \(conn.peer.address).")
+                if let error = e {
+                    print(error)
+                }
+            }
+        )
+        .connect()
+}
+
+func sendHello(_ conn: Connection) {
+    print("Sending a Hello message...")
+    Message("Hello!").send(through: conn).handled(by: .onResponse { content in
+        print("Receive message:", content)
+        Thread.sleep(forTimeInterval: 2)
+        conn.disconnect()
+    })
+}
