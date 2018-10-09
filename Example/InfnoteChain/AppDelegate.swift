@@ -52,7 +52,7 @@ func procedure() {
         return
     }
     Connection(peer)
-        .handled(by: ConnectionHandler
+        .handled(by: ConnectionObserver
             .onConnected { conn in
                 print("Success to connect host \(conn.peer.address).")
                 sendHello(conn)
@@ -69,7 +69,8 @@ func procedure() {
 
 func sendHello(_ conn: Connection) {
     print("Sending a Hello message...")
-    Message("Hello!").send(through: conn).handled(by: .onResponse { content in
+    let msg = Message(type: .hello, content: ["payload": "Hello"])
+    Courier(msg).send(through: conn).handled(by: .onResponse { content in
         print("Receive message:", content)
         Thread.sleep(forTimeInterval: 2)
         conn.disconnect()

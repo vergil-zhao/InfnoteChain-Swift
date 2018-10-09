@@ -2,88 +2,99 @@
 //  Message.swift
 //  InfnoteChain
 //
-//  Created by Vergil Choi on 2018/10/7.
+//  Created by Vergil Choi on 2018/10/8.
 //
 
 import Foundation
 
-public indirect enum MessageHandler {
-    case nothing
-    case response((String) -> Void, MessageHandler)
-    case error((Error) -> Void, MessageHandler)
+
+public class Message: CustomStringConvertible {
     
-    public var response: ((String) -> Void)? {
-        switch self {
-        case .response(let callback, _):
-            return callback
-        case .error(_, let handler):
-            return handler.response
-        default:
+    public enum Kind: String {
+        case hello  = "hello"
+        case ok     = "ok"
+        case ask    = "ask"
+        case answer = "answer"
+    }
+    
+    public let identifier: String!
+    public let type: Kind!
+    public var content: [String: Any]? = nil
+    public var error: Any? = nil
+    
+    public var dict: [String: Any] {
+        return [
+            "identifier": identifier,
+            "type": type.rawValue,
+            "content": content,
+            "error": error
+        ]
+    }
+    
+    public var json: String {
+        return try! JSONSerialization.data(withJSONObject: dict, options: []).utf8!
+    }
+    
+    public init?(_ dict: [String: Any]) {
+        guard let identifier = dict["identifier"] as? String,
+            let type = dict["type"] as? String else {
             return nil
+        }
+        
+        self.identifier = identifier
+        self.type = Kind(rawValue: type)
+        
+        if let content = dict["content"] as? [String: Any] {
+            self.content = content
+        }
+        if let error = dict["error"] {
+            self.error = error
         }
     }
     
-    public var error: ((Error) -> Void)? {
-        switch self {
-        case .error(let callback, _):
-            return callback
-        default:
-            return nil
+    public init(type: Kind, content: [String: Any]? = nil, error: Any? = nil, identifier: String? = nil) {
+        self.identifier = identifier ?? String.random(10, dictionary: .characters + .digits)
+        self.type = type
+        self.content = content
+        self.error = error
+    }
+    
+    public var description: String {
+        var result = "\n[Type]       \(type.rawValue)\n[Identifier] \(identifier!)"
+        if let content = content {
+            result += "\n[Content]    \(content)"
         }
-    }
-    
-    public init() {
-        self = .nothing
-    }
-    
-    public static func onResponse(_ callback: @escaping (String) -> Void) -> MessageHandler {
-        return .response(callback, .nothing)
-    }
-    
-    public func onError(_ callback: @escaping (Error) -> Void) -> MessageHandler {
-        return .error(callback, self)
+        if let error = error {
+            result += "\n[Error]      \(error)"
+        }
+        return result
     }
 }
 
-public indirect enum Message {
-    case content(String)
-    case sending(Connection, Message)
-    case handled(MessageHandler, Message)
-    
-    public var content: String {
-        switch self {
-        case .content(let content):
-            return content
-        case .sending(_, let msg):
-            return msg.content
-        case .handled(_, let msg):
-            return msg.content
-        }
+public extension String {
+    open static var uppercase: String {
+        return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     }
     
-    public init(_ content: String) {
-        self = .content(content)
+    open static var lowercase: String {
+        return "abcdefghijklmnopqrstuvwxyz"
     }
     
-    @discardableResult
-    public func send(through conn: Connection) -> Message {
-        guard case let .content(content) = self else {
-            return self
-        }
-        conn.peer.socket.write(string: content)
-        return .sending(conn, self)
+    open static var digits: String {
+        return "0123456789"
     }
     
-    @discardableResult
-    public func handled(by handler: MessageHandler) -> Message {
-        switch self {
-        case .sending(let conn, _):
-            conn.peer.socket.onText = handler.response
-            return .handled(handler, self)
-        case .handled(_, let msg):
-            return msg.handled(by: handler)
-        case .content(_):
-            return self
-        }
+    open static var characters: String {
+        return uppercase + lowercase
+    }
+    
+    open static func random(_ length: Int, dictionary: String) -> String {
+        return (0..<length)
+            .map { _ in dictionary[Int.random(in: 0..<dictionary.count)] }
+            .reduce("", +)
+    }
+    
+    subscript (i: Int) -> String {
+        return String(self[index(startIndex, offsetBy: i)])
     }
 }
