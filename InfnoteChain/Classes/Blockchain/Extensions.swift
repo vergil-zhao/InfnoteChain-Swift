@@ -8,7 +8,7 @@
 import Foundation
 
 public extension Data {
-    open var humanReadableSize: String {
+    public var humanReadableSize: String {
         if count > 2 << 29 {
             return String(format: "%.03f GB", Double(count) / Double(2 << 29))
         }

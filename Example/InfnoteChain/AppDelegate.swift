@@ -48,31 +48,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 func procedure() {
-    guard let peer = Peer(address: "echo.websocket.org") else {
-        return
-    }
-    Connection(peer)
-        .handled(by: ConnectionObserver
-            .onConnected { conn in
-                print("Success to connect host \(conn.peer.address).")
-                sendHello(conn)
-            }
-            .onDisconnected { e, conn in
-                print("Disconnected from \(conn.peer.address).")
-                if let error = e {
-                    print(error)
-                }
-            }
-        )
-        .connect()
+    ShareManager.shared.connect()
 }
 
-func sendHello(_ conn: Connection) {
-    print("Sending a Hello message...")
-    let msg = Message(type: .hello, content: ["payload": "Hello"])
-    Courier(msg).send(through: conn).handled(by: .onResponse { content in
-        print("Receive message:", content)
-        Thread.sleep(forTimeInterval: 2)
-        conn.disconnect()
-    })
-}

@@ -46,13 +46,13 @@ public indirect enum CourierObserver {
 }
 
 public indirect enum Courier {
-    case message(Message)
+    case bring(Message)
     case sending(Connection, Courier)
     case handled(CourierObserver, Courier)
     
     public var message: Message {
         switch self {
-        case .message(let content):
+        case .bring(let content):
             return content
         case .sending(_, let courier):
             return courier.message
@@ -62,12 +62,12 @@ public indirect enum Courier {
     }
     
     public init(_ message: Message) {
-        self = .message(message)
+        self = .bring(message)
     }
     
     @discardableResult
     public func send(through conn: Connection) -> Courier {
-        guard case let .message(message) = self else {
+        guard case let .bring(message) = self else {
             return self
         }
         conn.peer.dispatcher!.send(message: message)
@@ -85,7 +85,7 @@ public indirect enum Courier {
             return self
         case .handled(_, let courier):
             return courier.handled(by: handler)
-        case .message(_):
+        case .bring(_):
             return self
         }
     }

@@ -16,6 +16,13 @@ public class Peer: Object {
     @objc open dynamic var port: Int = 80
     @objc open dynamic var rank: Int = 100
     
+    public var dict: [String: Any] {
+        return [
+            "address": address,
+            "port": port
+        ]
+    }
+    
     var dispatcher: Dispatcher! = nil
     
     public override static func primaryKey() -> String? {
@@ -26,17 +33,17 @@ public class Peer: Object {
         self.init()
         self.address = address
         self.port = port
-        guard let socket = createSocket() else {
+        guard createDispatcher() else {
             return nil
         }
-        self.dispatcher = Dispatcher(with: socket)
     }
     
-    func createSocket() -> WebSocket? {
+    func createDispatcher() -> Bool {
         guard let url = URL(string: "ws://\(address):\(port)") else {
-            return nil
+            return false
         }
-        return WebSocket(url: url)
+        self.dispatcher = Dispatcher(with: WebSocket(url: url))
+        return true
     }
 }
 

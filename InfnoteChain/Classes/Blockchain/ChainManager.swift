@@ -10,7 +10,7 @@ import RealmSwift
 
 open class ChainManager {
     
-    open static var shared = ChainManager()
+    public static var shared = ChainManager()
     
     private let database = try! Realm()
     private var filterResultCache: [String: Results<Block>] = [:]
@@ -62,6 +62,13 @@ open class ChainManager {
     
     open func block(ofChain chainID: String, byHash hash: String) -> Block? {
         return database.objects(Block.self).filter("chainID == '\(chainID)' AND blockHash == '\(hash)'").first
+    }
+    
+    open func blocks(ofChain chainID: String, from: Int, to: Int) -> [Block] {
+        return Array(database
+            .objects(Block.self)
+            .filter("chainID == '\(chainID)' AND height >= \(from) AND height <= \(to)")
+        )
     }
     
     open func height(ofChain chainID: String) -> Int {

@@ -73,7 +73,6 @@ public indirect enum Connection {
     }
     
     public init(_ peer: Peer) {
-        peer.createSocket()
         self = .initial(peer)
     }
     
@@ -98,7 +97,7 @@ public indirect enum Connection {
         case .initial(let peer):
             peer.dispatcher!.socket.connect()
             return .connecting(self)
-        case let .handled(handler, conn):
+        case .handled(_, let conn):
             return conn.connect()
         case .connecting(let conn):
             return conn.connect()

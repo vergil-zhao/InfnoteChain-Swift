@@ -9,8 +9,8 @@
 import UIKit
 
 open class Key {
-    open static let defaultTag = "com.infnote.keys.default"
-    open static let keySizeInBits = 256
+    public static let defaultTag = "com.infnote.keys.default"
+    public static let keySizeInBits = 256
     
     public enum ImportError: Error {
         case cannotExtractPublicKey
@@ -26,8 +26,8 @@ open class Key {
         case onlyPublicKey
     }
 
-    open let publicKey: SecKey
-    open var privateKey: SecKey?
+    public let publicKey: SecKey
+    public var privateKey: SecKey?
     
     open var canSign: Bool {
         return privateKey != nil
@@ -130,7 +130,13 @@ open class Key {
         self.publicKey = publicKey
     }
     
+    // Just keep one private key for now
+    // TODO: Keep more than one private keys
     open func save() throws {
+        guard let privateKey = self.privateKey else {
+            return
+        }
+        
         Key.clean()
         
         let status = SecItemAdd([
@@ -168,20 +174,20 @@ open class Key {
 public extension SecKey {
     
     // TODO: Add attribute judgement to avoid exceptions
-    open var data: Data {
+    public var data: Data {
         return SecKeyCopyExternalRepresentation(self, nil)! as Data
     }
     
-    open var hex: String {
+    public var hex: String {
         return data.hex
     }
     
-    open var base58: String {
+    public var base58: String {
         return data.base58
     }
     
     // TODO: Add attribute judgement & remove print
-    open func verify(message: Data, signature: Data) -> Bool {
+    public func verify(message: Data, signature: Data) -> Bool {
         var error: Unmanaged<CFError>?
         guard SecKeyVerifySignature(self,
                                     .ecdsaSignatureMessageX962SHA256,

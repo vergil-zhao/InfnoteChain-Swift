@@ -63,6 +63,7 @@ class Dispatcher {
         callbacks[message.identifier] = handler
     }
     
+    @discardableResult
     func dispatch(_ message: Message) -> Bool {
         if let callback = callbacks[message.identifier] {
             callback(message)

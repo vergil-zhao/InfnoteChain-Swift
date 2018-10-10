@@ -75,7 +75,7 @@ open class Block: Object {
             "time": Int(time.timeIntervalSince1970),
             "chain_id": chainID,
             "height": height,
-            "payload": String(data: payload, encoding: .utf8)
+            "payload": String(data: payload, encoding: .utf8)!
             ] as [String: Any]
         if !isGenesis {
             dict["prev_hash"] = prevHash
@@ -101,22 +101,34 @@ open class Block: Object {
             && key.verify(data: dataForHashing, signature: Data(base58: signature)!)
     }
     
-    // TODO: check data
-    public convenience init(jsonData data: Data) {
-        self.init(dict: try! JSONSerialization.jsonObject(with: data, options: []) as! [String: Any])
+    public convenience init?(jsonData data: Data) {
+        guard let t = try? JSONSerialization.jsonObject(with: data, options: []),
+            let json = t as? [String: Any] else {
+            return nil
+        }
+        self.init(dict: json)
     }
     
-    // TODO: validate dict
-    public convenience init(dict: [String: Any]) {
+    public convenience init?(dict: [String: Any]) {
         self.init()
         
-        blockHash = dict["hash"] as! String
-        prevHash = dict["prev_hash"] as! String
-        time = Date(timeIntervalSince1970: TimeInterval(dict["time"] as! Int))
-        signature = dict["signature"] as! String
-        chainID = dict["chain_id"] as! String
-        height = dict["height"] as! Int
-        payload = Data(base58: dict["payload"] as! String)!
+        guard let blockHash = dict["hash"] as? String,
+            let prevHash = dict["prev_hash"] as? String,
+            let time = dict["time"] as? Int,
+            let signature = dict["signature"] as? String,
+            let chainID = dict["chain_id"] as? String,
+            let height = dict["height"] as? Int,
+            let payload = dict["payload"] as? String else {
+            return nil
+        }
+        
+        self.blockHash = blockHash
+        self.prevHash = prevHash
+        self.time = Date(timeIntervalSince1970: TimeInterval(time))
+        self.signature = signature
+        self.chainID = chainID
+        self.height = height
+        self.payload = payload.data(using: .utf8)!
     }
     
     override open static func primaryKey() -> String? {

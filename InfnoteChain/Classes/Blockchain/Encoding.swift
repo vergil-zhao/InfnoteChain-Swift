@@ -33,15 +33,15 @@ public extension Data {
         self = data
     }
     
-    open var base58: String {
+    public var base58: String {
         return Base58.encode(self)
     }
     
-    open var hex: String {
+    public var hex: String {
         return map { String(format: "%02hhx", $0) }.joined()
     }
     
-    open var sha256: Data {
+    public var sha256: Data {
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         self.withUnsafeBytes {
             _ = CC_SHA256($0, CC_LONG(self.count), &hash)
@@ -49,7 +49,7 @@ public extension Data {
         return Data(bytes: hash)
     }
     
-    open var utf8: String? {
+    public var utf8: String? {
         return String(data: self, encoding: .utf8)
     }
 }

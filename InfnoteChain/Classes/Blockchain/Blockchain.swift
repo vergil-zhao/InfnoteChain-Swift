@@ -9,9 +9,9 @@ import Foundation
 
 open class Blockchain {
     
-    open let key: Key
-    open let id: String
-    open let manager = ChainManager.shared
+    public let key: Key
+    public let id: String
+    public let manager = ChainManager.shared
     
     var _info: [String: Any]?
     open var info: [String: Any]? {
