@@ -53,7 +53,7 @@ public class Speaking {
             return dict.reduce("") {
                 let spaces = String(repeating: " ", count: maxWidth - $1.key.count)
                 let content = String(describing: $1.value)
-                return $0 + "\n[\($1.key)\(spaces)] \(content)"
+                return $0 + "[\($1.key)\(spaces)] \(content)\n"
             }
         }
     }

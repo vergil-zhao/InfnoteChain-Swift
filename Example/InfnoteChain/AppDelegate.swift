@@ -48,6 +48,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 }
 
 func procedure() {
-    ShareManager.shared.connect()
+    ShareManager.shared.sharing()
 }
 

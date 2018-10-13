@@ -47,7 +47,7 @@ public class ShareManager {
         let conn = Connection(peer)
         conn.handled(by: ConnectionObserver
             .onConnected { conn in
-                print("[Connected   ] \(peer.address):\(peer.port)")
+                print("[Connected] \(peer.address):\(peer.port)")
                 self.sendInfo(to: conn)
             }
             .onDisconnected { error, conn in
@@ -83,6 +83,15 @@ public class ShareManager {
             Courier.bring(peers.answer(for: question)).send(through: conn)
         case .newBlock:
             let newBlock = sentence as! Speaking.NewBlock
+            if let chain = ChainManager.shared.get(chain: newBlock.chainID)?.chain {
+                if chain.height < newBlock.height {
+                    getBlock(from: conn, of: chain.id, from: chain.height, to: newBlock.height - 1)
+                }
+            }
+            else {
+                Blockchain(publicKey: newBlock.chainID).save()
+                getBlock(from: conn, of: newBlock.chainID, from: 0, to: newBlock.height - 1)
+            }
             spread(sentence: newBlock, except: conn.peer)
         default:
             self.unexpected(question)
@@ -144,14 +153,11 @@ public class ShareManager {
         }
         
         info.chains.forEach { args in
-            let wantBlocks = Speaking.WantBlocks()
-            wantBlocks.chainID = args.key
-            wantBlocks.from = 0
-            
+            var start = 0
             if let chain = ChainManager.shared.get(chain: args.key)?.chain {
                 let height = chain.height
                 if height < args.value {
-                    wantBlocks.from = height
+                    start = height
                 }
                 else {
                     return
@@ -160,18 +166,28 @@ public class ShareManager {
             else {
                 Blockchain(publicKey: args.key).save()
             }
-            wantBlocks.to = args.value - 1
             
-            Courier.bring(wantBlocks.question).send(through: conn).handled(by: CourierObserver
-                .onResponse { message in
-                    guard let blocks = Speaking.create(from: message) as? Speaking.Blocks else {
-                        self.unexpected(message)
-                        return
-                    }
-                    blocks.blocks.forEach { ChainManager.shared.add(block: $0) }
-                }
-            )
+            let end = args.value - 1
+            
+            self.getBlock(from: conn, of: args.key, from: start, to: end)
         }
+    }
+    
+    func getBlock(from conn: Connection, of chainID: String, from: Int, to: Int) {
+        let wantBlocks = Speaking.WantBlocks()
+        wantBlocks.chainID = chainID
+        wantBlocks.from = from
+        wantBlocks.to = to
+        
+        Courier.bring(wantBlocks.question).send(through: conn).handled(by: CourierObserver
+            .onResponse { message in
+                guard let blocks = Speaking.create(from: message) as? Speaking.Blocks else {
+                    self.unexpected(message)
+                    return
+                }
+                blocks.blocks.forEach { ChainManager.shared.add(block: $0) }
+            }
+        )
     }
     
     func unexpected(_ message: Message) {

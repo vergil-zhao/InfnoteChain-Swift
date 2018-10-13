@@ -9,6 +9,7 @@ import Foundation
 import Starscream
 
 class Dispatcher {
+    // TODO: add a time mark, remove callbacks no response for long time
     var callbacks: [String: (Message) -> Void] = [:]
     var globalHandler: ((Message) -> Void)? = nil
     

@@ -57,11 +57,11 @@ public class Message: CustomStringConvertible {
     }
     
     public var description: String {
-        var result = "\n[Type]       \(type.rawValue)\n[Identifier] \(identifier!)"
+        var result = "[Type      ] \(type.rawValue)\n[Identifier] \(identifier!)"
         if let content = content {
-            result += "\n[Content]    \(content)"
+            result += "\n[Content   ] \(content)"
         }
-        return result
+        return result + "\n"
     }
 }
 

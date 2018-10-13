@@ -113,7 +113,6 @@ open class Block: Object {
         self.init()
         
         guard let blockHash = dict["hash"] as? String,
-            let prevHash = dict["prev_hash"] as? String,
             let time = dict["time"] as? Int,
             let signature = dict["signature"] as? String,
             let chainID = dict["chain_id"] as? String,
@@ -123,7 +122,7 @@ open class Block: Object {
         }
         
         self.blockHash = blockHash
-        self.prevHash = prevHash
+        self.prevHash = dict["prev_hash"] as? String ?? ""
         self.time = Date(timeIntervalSince1970: TimeInterval(time))
         self.signature = signature
         self.chainID = chainID
