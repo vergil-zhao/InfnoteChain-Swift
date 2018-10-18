@@ -73,7 +73,11 @@ public class Speaking {
         public var version = "0.1"
         public var peers = 0
         public var chains: [String: Int] = [:]
-        public var platform = "iOS " + UIDevice.current.systemVersion
+        public var platform: [String: String] = [
+            "system": UIDevice.current.systemName,
+            "version": UIDevice.current.systemVersion,
+            "node": UIDevice.current.name,
+        ]
         public var isFullNode = false
         
         override var dict: [String: Any] {
@@ -90,7 +94,7 @@ public class Speaking {
             guard let version = dict["version"] as? String,
                 let peers = dict["peers"] as? Int,
                 let chains = dict["chains"] as? [String: Int],
-                let platform = dict["platform"] as? String,
+                let platform = dict["platform"] as? [String: String],
                 let isFullNode = dict["full_node"] as? Bool else {
                     return nil
             }

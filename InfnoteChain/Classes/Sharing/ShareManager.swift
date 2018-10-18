@@ -114,12 +114,12 @@ public class ShareManager {
         )
     }
     
-    func spread(sentence: Speaking.NewBlock, except: Peer) {
+    func spread(sentence: Speaking.NewBlock, except: Peer?) {
         guard spreadCache.firstIndex(of: sentence.message!.identifier) == nil else {
             return
         }
         peers.forEach { peer in
-            guard peer != except else {
+            if let e = except, peer == e {
                 return
             }
             Courier.bring(sentence.question).send(through: Connection(peer))
@@ -153,6 +153,10 @@ public class ShareManager {
         }
         
         info.chains.forEach { args in
+            if args.value <= 0 {
+                return
+            }
+            
             var start = 0
             if let chain = ChainManager.shared.get(chain: args.key)?.chain {
                 let height = chain.height
@@ -191,6 +195,7 @@ public class ShareManager {
     }
     
     func unexpected(_ message: Message) {
+        print("Got unexpected message:")
         print(message)
     }
     

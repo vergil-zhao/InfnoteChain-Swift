@@ -45,6 +45,10 @@ public class Peer: Object {
         self.dispatcher = Dispatcher(with: WebSocket(url: url))
         return true
     }
+    
+    public static func == (lhs: Peer, rhs: Peer) -> Bool {
+        return lhs.address == rhs.address && lhs.port == rhs.port
+    }
 }
 
 public class PeerManager {

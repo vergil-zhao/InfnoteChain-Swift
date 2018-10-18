@@ -91,6 +91,7 @@ open class ChainManager {
         try! database.write {
             database.add(block)
         }
+        // TODO: send a global notification
     }
     
     // MARK: - Debug
