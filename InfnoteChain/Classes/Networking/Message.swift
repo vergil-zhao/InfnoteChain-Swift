@@ -11,7 +11,7 @@ import Foundation
 public class Message: CustomStringConvertible {
     
     public enum Kind: String {
-        case ok         = "ok"
+        case broadcast  = "broadcast"
         case question   = "question"
         case answer     = "answer"
         case error      = "error"

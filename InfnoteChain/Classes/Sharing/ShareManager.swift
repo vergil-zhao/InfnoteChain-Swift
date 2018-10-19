@@ -85,14 +85,18 @@ public class ShareManager {
             let newBlock = sentence as! Speaking.NewBlock
             if let chain = ChainManager.shared.get(chain: newBlock.chainID)?.chain {
                 if chain.height < newBlock.height {
-                    getBlock(from: conn, of: chain.id, from: chain.height, to: newBlock.height - 1)
+                    getBlock(from: conn, of: chain.id, from: chain.height, to: newBlock.height - 1) {
+                        self.broadcast(sentence: newBlock, except: conn.peer)
+                    }
                 }
             }
             else {
                 Blockchain(publicKey: newBlock.chainID).save()
-                getBlock(from: conn, of: newBlock.chainID, from: 0, to: newBlock.height - 1)
+                getBlock(from: conn, of: newBlock.chainID, from: 0, to: newBlock.height - 1) {
+                    self.broadcast(sentence: newBlock, except: conn.peer)
+                }
             }
-            spread(sentence: newBlock, except: conn.peer)
+            
         default:
             self.unexpected(question)
         }
@@ -114,17 +118,18 @@ public class ShareManager {
         )
     }
     
-    func spread(sentence: Speaking.NewBlock, except: Peer?) {
-        guard spreadCache.firstIndex(of: sentence.message!.identifier) == nil else {
+    func broadcast(sentence: Speaking.NewBlock, except: Peer?) {
+        if let message = sentence.message, spreadCache.firstIndex(of: message.identifier) != nil {
             return
         }
+        let msg = sentence.broadcast
+        spreadCache.append(msg.identifier)
         peers.forEach { peer in
             if let e = except, peer == e {
                 return
             }
-            Courier.bring(sentence.question).send(through: Connection(peer))
+            Courier.bring(msg).send(through: Connection(peer))
         }
-        spreadCache.append(sentence.message!.identifier)
     }
     
     // TEMP: save all peers server has
@@ -177,7 +182,7 @@ public class ShareManager {
         }
     }
     
-    func getBlock(from conn: Connection, of chainID: String, from: Int, to: Int) {
+    func getBlock(from conn: Connection, of chainID: String, from: Int, to: Int, complete: (() -> Void)? = nil) {
         let wantBlocks = Speaking.WantBlocks()
         wantBlocks.chainID = chainID
         wantBlocks.from = from
@@ -190,6 +195,7 @@ public class ShareManager {
                     return
                 }
                 blocks.blocks.forEach { ChainManager.shared.add(block: $0) }
+                complete?()
             }
         )
     }

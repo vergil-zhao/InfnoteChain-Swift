@@ -9,7 +9,6 @@ import Foundation
 
 public class Speaking {
     public enum Kind: String {
-        case empty
         case info       = "info"
         case error      = "error"
         case wantPeers  = "want_peers"
@@ -28,6 +27,13 @@ public class Speaking {
         }
         var dict: [String: Any] {
             return ["type": type.rawValue]
+        }
+        
+        public var broadcast: Message {
+            if let message = self.message {
+                return Message(type: .broadcast, identifier: message.identifier, content: dict)
+            }
+            return Message(type: .broadcast, identifier: nil, content: dict)
         }
         
         // create a question type of message
@@ -55,16 +61,6 @@ public class Speaking {
                 let content = String(describing: $1.value)
                 return $0 + "[\($1.key)\(spaces)] \(content)\n"
             }
-        }
-    }
-    
-    public class Empty: Sentence {
-        public override var type: Kind {
-            return .empty
-        }
-        
-        public override func answer(for question: Message) -> Message {
-            return Message(type: .ok, identifier: question.identifier)
         }
     }
     
@@ -104,6 +100,15 @@ public class Speaking {
             self.chains = chains
             self.platform = platform
             self.isFullNode = isFullNode
+        }
+        
+        override init() {
+            super.init()
+            peers = PeerManager.shared.allPeers.count
+            let chains = Array<Blockchain>(ChainManager.shared.allChains.map { $0.chain })
+            for chain in chains {
+                self.chains[chain.id] = chain.height
+            }
         }
     }
     
@@ -248,19 +253,11 @@ public class Speaking {
     }
     
     public class func create(from message: Message) -> Sentence? {
-        var sentence = Sentence()
-        let content = message.content
-        if message.type == .ok {
-            sentence = Empty()
-        }
-        else {
-            guard let content = content,
-                let type = content["type"] as? String,
-                let kind = Kind(rawValue: type),
-                let s = self.create(with: kind, content: content) else {
+        guard let content = message.content,
+            let type = content["type"] as? String,
+            let kind = Kind(rawValue: type),
+            let sentence = self.create(with: kind, content: content) else {
                 return nil
-            }
-            sentence = s
         }
         sentence.message = message
         return sentence
@@ -268,8 +265,6 @@ public class Speaking {
     
     class func create(with type: Kind, content: [String: Any]) -> Sentence? {
         switch type {
-        case .empty:
-            return nil
         case .info:
             return Info(with: content)
         case .error:
