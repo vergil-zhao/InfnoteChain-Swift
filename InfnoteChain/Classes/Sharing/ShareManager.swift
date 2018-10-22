@@ -15,13 +15,13 @@ public class ShareManager {
         }
     }
     
-    var peers: [Peer] = []
+    public var peers: [Peer] = []
     var spreadCache: [String] = []
     
     private init() {}
     
     public func sharing() {
-        connect()
+//        connect()
         // TODO: Refresh every n seconds
     }
     
@@ -37,17 +37,30 @@ public class ShareManager {
     }
     
     func connect() {
-        peers = Array(PeerManager.shared.allPeers.prefix(maxPeers))
-            .filter { $0.createDispatcher() }
-            
+        let peers = Array(PeerManager.shared.allPeers.prefix(maxPeers))
         peers.forEach { self.connect(to: $0) }
     }
     
-    func connect(to peer: Peer) {
+    public func isConnected(with peer: Peer) -> Bool {
+        var flag = false
+        for p in peers {
+            if p == peer {
+                flag = true
+            }
+        }
+        return flag
+    }
+    
+    public func connect(to peer: Peer) {
+        guard peer.createDispatcher() else {
+            return
+        }
         let conn = Connection(peer)
         conn.handled(by: ConnectionObserver
             .onConnected { conn in
                 print("[Connected] \(peer.address):\(peer.port)")
+                self.peers.append(peer)
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InfnoteChain.Peer.Connected"), object: peer)
                 self.sendInfo(to: conn)
             }
             .onDisconnected { error, conn in
@@ -55,12 +68,23 @@ public class ShareManager {
                 if let e = error {
                     print(e)
                 }
-                _ = self.peers.remove(at: self.peers.firstIndex(of: peer)!)
+                if let index = self.peers.firstIndex(of: peer) {
+                    _ = self.peers.remove(at: index)
+                }
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InfnoteChain.Peer.Disconnected"), object: peer)
             })
             .connect()
         
         peer.dispatcher.globalHandler = { message in
             self.answer(question: message, for: conn)
+        }
+    }
+    
+    public func disconnect(to peer: Peer) {
+        for p in peers {
+            if p == peer {
+                p.dispatcher.socket.disconnect()
+            }
         }
     }
     
@@ -73,9 +97,7 @@ public class ShareManager {
         switch sentence.type {
         case .wantBlocks:
             let wantBlocks = sentence as! Speaking.WantBlocks
-            let blocks = Speaking.Blocks()
-            blocks.blocks = ChainManager.shared.blocks(ofChain: wantBlocks.chainID, from: wantBlocks.from, to: wantBlocks.to)
-            Courier.bring(blocks.answer(for: question)).send(through: conn)
+            sendBlocks(with: wantBlocks, to: conn)
         case .wantPeers:
             let wantPeers = sentence as! Speaking.WantPeers
             let peers = Speaking.Peers()
@@ -96,6 +118,9 @@ public class ShareManager {
                     self.broadcast(sentence: newBlock, except: conn.peer)
                 }
             }
+        case .blocks:
+            let blocks = sentence as! Speaking.Blocks
+            blocks.blocks.forEach { ChainManager.shared.add(block: $0) }
             
         default:
             self.unexpected(question)
@@ -110,10 +135,11 @@ public class ShareManager {
             .onResponse { message in
                 guard let info = Speaking.create(from: message) as? Speaking.Info else {
                     self.unexpected(message)
-                    return
+                    return true
                 }
                 self.peersStrategy(info, for: conn)
                 self.chainsStrategy(info, for: conn)
+                return true
             }
         )
     }
@@ -144,9 +170,10 @@ public class ShareManager {
             .onResponse { message in
                 guard let peers = Speaking.create(from: message) as? Speaking.Peers else {
                     self.unexpected(message)
-                    return
+                    return true
                 }
                 peers.peers.forEach { PeerManager.shared.addOrUpdate($0) }
+                return true
             }
         )
     }
@@ -182,6 +209,7 @@ public class ShareManager {
         }
     }
     
+    // TODO: should collect all servers info before fetching blocks
     func getBlock(from conn: Connection, of chainID: String, from: Int, to: Int, complete: (() -> Void)? = nil) {
         let wantBlocks = Speaking.WantBlocks()
         wantBlocks.chainID = chainID
@@ -192,12 +220,36 @@ public class ShareManager {
             .onResponse { message in
                 guard let blocks = Speaking.create(from: message) as? Speaking.Blocks else {
                     self.unexpected(message)
-                    return
+                    return true
                 }
                 blocks.blocks.forEach { ChainManager.shared.add(block: $0) }
-                complete?()
+                if blocks.end {
+                    complete?()
+                }
+                return blocks.end
             }
         )
+    }
+    
+    func sendBlocks(with wantBlocks: Speaking.WantBlocks, to conn: Connection) {
+        let blocks = ChainManager.shared.blocks(ofChain: wantBlocks.chainID, from: wantBlocks.from, to: wantBlocks.to)
+        var size = 0
+        var tmp: [Block] = []
+        var result: [Speaking.Blocks] = []
+        for block in blocks {
+            if size + block.size > Int(Double(1 >> 20) * 1.5) {
+                Courier.bring(Speaking.Blocks(tmp, end: false).answer(for: wantBlocks.message!)).send(through: conn)
+                tmp = [block]
+                size = 0
+            }
+            else {
+                size += block.size
+                tmp.append(block)
+            }
+        }
+        if !tmp.isEmpty {
+            Courier.bring(Speaking.Blocks(tmp, end: false).answer(for: wantBlocks.message!)).send(through: conn)
+        }
     }
     
     func unexpected(_ message: Message) {

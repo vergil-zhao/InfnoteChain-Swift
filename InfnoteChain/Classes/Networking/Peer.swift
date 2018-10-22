@@ -29,7 +29,7 @@ public class Peer: Object {
         return "address"
     }
     
-    public convenience init?(address: String, port: Int = 80) {
+    public convenience init?(address: String, port: Int = 32767) {
         self.init()
         self.address = address
         self.port = port
@@ -66,6 +66,19 @@ public class PeerManager {
     public func addOrUpdate(_ peer: Peer) {
         try! database.write {
             database.add(peer, update: true)
+        }
+    }
+    
+    public func getPeer(_ address: String) -> Peer? {
+        return database.objects(Peer.self).filter("address == '\(address)'").first
+    }
+    
+    public func remove(_ peer: Peer) {
+        guard let real = getPeer(peer.address) else {
+            return
+        }
+        try! database.write {
+            database.delete(real)
         }
     }
 }

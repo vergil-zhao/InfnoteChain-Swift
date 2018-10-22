@@ -18,6 +18,9 @@ class BlocksViewController: UITableViewController {
         
         tableView.tableFooterView = UIView()
         
+        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "InfnoteChain.Block.Saved"), object: nil, queue: OperationQueue.main) { _ in
+            self.tableView.reloadData()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -41,7 +44,12 @@ class BlocksViewController: UITableViewController {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         
         cell.textLabel?.text = "\(indexPath.row)"
-        cell.detailTextLabel?.text = chain[indexPath.row]!.payload.humanReadableSize
+        if let block = chain[indexPath.row] {
+            cell.detailTextLabel?.text = block.payload.humanReadableSize
+        }
+        else {
+            cell.detailTextLabel?.text = "Error!"
+        }
 
         return cell
     }

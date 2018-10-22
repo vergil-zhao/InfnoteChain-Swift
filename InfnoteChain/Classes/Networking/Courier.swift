@@ -9,10 +9,10 @@ import Foundation
 
 public indirect enum CourierObserver {
     case nothing
-    case response((Message) -> Void, CourierObserver)
+    case response((Message) -> Bool, CourierObserver)
     case error((Error) -> Void, CourierObserver)
     
-    public var response: ((Message) -> Void)? {
+    public var response: ((Message) -> Bool)? {
         switch self {
         case .response(let callback, _):
             return callback
@@ -36,7 +36,7 @@ public indirect enum CourierObserver {
         self = .nothing
     }
     
-    public static func onResponse(_ callback: @escaping (Message) -> Void) -> CourierObserver {
+    public static func onResponse(_ callback: @escaping (Message) -> Bool) -> CourierObserver {
         return .response(callback, .nothing)
     }
     

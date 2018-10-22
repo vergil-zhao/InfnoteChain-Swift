@@ -17,6 +17,10 @@ class ChainsViewController: UITableViewController {
         super.viewDidLoad()
         
         tableView.tableFooterView = UIView()
+        
+        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "InfnoteChain.Block.Saved"), object: nil, queue: OperationQueue.main) { _ in
+            self.tableView.reloadData()
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {

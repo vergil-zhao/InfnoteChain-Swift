@@ -75,7 +75,7 @@ open class Block: Object {
             "time": Int(time.timeIntervalSince1970),
             "chain_id": chainID,
             "height": height,
-            "payload": String(data: payload, encoding: .utf8)!
+            "payload": String(data: payload, encoding: .utf8) ?? ""
             ] as [String: Any]
         if !isGenesis {
             dict["prev_hash"] = prevHash
@@ -92,6 +92,10 @@ open class Block: Object {
     
     open var data: Data {
         return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
+    }
+    
+    open var size: Int {
+        return data.count
     }
     
     open var isValid: Bool {

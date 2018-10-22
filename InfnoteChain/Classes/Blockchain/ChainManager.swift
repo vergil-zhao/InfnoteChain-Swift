@@ -92,6 +92,11 @@ open class ChainManager {
             database.add(block)
         }
         // TODO: send a global notification
+        let now = Date()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd HH:mm:ss,SSS"
+        print("[\(formatter.string(from: now))] New valid block saved: \(block.blockHash)")
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InfnoteChain.Block.Saved"), object: block)
     }
     
     // MARK: - Debug

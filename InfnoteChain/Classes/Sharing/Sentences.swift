@@ -209,15 +209,24 @@ public class Speaking {
     public class Blocks: Sentence {
         public override var type: Kind { return .blocks }
         public var blocks: [Block] = []
+        public var end: Bool = true
         
         override var dict: [String: Any] {
             return super.dict + [
-                "blocks": blocks.map { $0.dict }
+                "blocks": blocks.map { $0.dict },
+                "end": end
             ]
         }
         
+        public convenience init(_ blocks: [Block], end: Bool = true) {
+            self.init()
+            self.blocks = blocks
+            self.end = end
+        }
+        
         public convenience init?(with dict:[String: Any]) {
-            guard let blocks = dict["blocks"] as? [[String: Any]] else {
+            guard let blocks = dict["blocks"] as? [[String: Any]],
+                let end = dict["end"] as? Bool else {
                 return nil
             }
             self.init()
@@ -226,6 +235,7 @@ public class Speaking {
                     self.blocks.append(block)
                 }
             }
+            self.end = end
         }
     }
     

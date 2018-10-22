@@ -10,7 +10,7 @@ import Starscream
 
 class Dispatcher {
     // TODO: add a time mark, remove callbacks no response for long time
-    var callbacks: [String: (Message) -> Void] = [:]
+    var callbacks: [String: (Message) -> Bool] = [:]
     var globalHandler: ((Message) -> Void)? = nil
     
     var onConnected: (() -> Void)? {
@@ -60,15 +60,16 @@ class Dispatcher {
         socket.write(string: message.json)
     }
     
-    func register(_ handler: @escaping (Message) -> Void, for message: Message) {
+    func register(_ handler: @escaping (Message) -> Bool, for message: Message) {
         callbacks[message.identifier] = handler
     }
     
     @discardableResult
     func dispatch(_ message: Message) -> Bool {
         if let callback = callbacks[message.identifier] {
-            callback(message)
-            callbacks[message.identifier] = nil
+            if callback(message) {
+                callbacks[message.identifier] = nil
+            }
             return true
         }
         if let global = globalHandler {
