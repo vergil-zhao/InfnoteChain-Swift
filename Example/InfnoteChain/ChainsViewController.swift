@@ -59,16 +59,16 @@ class ChainsViewController: UITableViewController {
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! ChainCell
 
         let chain = manager.allChains[indexPath.row].chain
         if let info = chain.info, let name = info["name"] as? String {
-            cell.textLabel?.text = name
+            cell.nameLabel.text = name
         }
         else {
-            cell.textLabel?.text = chain.key.publicKey.base58
+            cell.nameLabel.text = chain.key.publicKey.base58
         }
-        cell.detailTextLabel?.text = "\(chain.height) bks"
+        cell.heightLabel.text = "\(chain.height) bks"
 
         return cell
     }
@@ -98,9 +98,17 @@ class ChainsViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "chain_detail" {
             let controller = segue.destination as! BlocksViewController
-            controller.title = tableView.cellForRow(at: tableView.indexPathForSelectedRow!)!.textLabel!.text
+            let cell = tableView.cellForRow(at: tableView.indexPathForSelectedRow!) as! ChainCell
+            controller.title = cell.nameLabel.text
             controller.chain = manager.allChains[tableView.indexPathForSelectedRow!.row].chain
         }
     }
 }
 
+
+class ChainCell: UITableViewCell {
+    
+    @IBOutlet weak var nameLabel: UILabel!
+    @IBOutlet weak var heightLabel: UILabel!
+    
+}

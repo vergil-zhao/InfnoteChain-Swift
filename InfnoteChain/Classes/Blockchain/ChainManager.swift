@@ -14,6 +14,7 @@ open class ChainManager {
     
     private let database = try! Realm()
     private var filterResultCache: [String: Results<Block>] = [:]
+    private let lock = NSLock()
     
     private init() {}
     
@@ -81,6 +82,7 @@ open class ChainManager {
     }
     
     open func add(block: Block) {
+        self.lock.lock()
         let result = self.block(ofChain: block.chainID, byHeight: block.height)
         if !block.isValid && result == nil {
             return
@@ -97,6 +99,7 @@ open class ChainManager {
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss,SSS"
         print("[\(formatter.string(from: now))] New valid block saved: \(block.blockHash)")
         NotificationCenter.default.post(name: NSNotification.Name(rawValue: "InfnoteChain.Block.Saved"), object: block)
+        self.lock.unlock()
     }
     
     // MARK: - Debug

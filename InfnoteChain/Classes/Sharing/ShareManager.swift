@@ -235,7 +235,6 @@ public class ShareManager {
         let blocks = ChainManager.shared.blocks(ofChain: wantBlocks.chainID, from: wantBlocks.from, to: wantBlocks.to)
         var size = 0
         var tmp: [Block] = []
-        var result: [Speaking.Blocks] = []
         for block in blocks {
             if size + block.size > Int(Double(1 >> 20) * 1.5) {
                 Courier.bring(Speaking.Blocks(tmp, end: false).answer(for: wantBlocks.message!)).send(through: conn)
@@ -248,7 +247,7 @@ public class ShareManager {
             }
         }
         if !tmp.isEmpty {
-            Courier.bring(Speaking.Blocks(tmp, end: false).answer(for: wantBlocks.message!)).send(through: conn)
+            Courier.bring(Speaking.Blocks(tmp, end: true).answer(for: wantBlocks.message!)).send(through: conn)
         }
     }
     
