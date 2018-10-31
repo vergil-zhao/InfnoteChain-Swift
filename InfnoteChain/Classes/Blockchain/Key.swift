@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import BigInt
 
 open class Key {
     public static let defaultTag = "com.infnote.keys.default"
@@ -103,6 +104,7 @@ open class Key {
     }
     
     public convenience init(publicKey: Data) throws {
+        let uncompressed = Key.decompress(publicKey: publicKey)
         let query: [String: Any] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
             kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
@@ -110,10 +112,10 @@ open class Key {
         ]
         var error: Unmanaged<CFError>?
         guard let key = SecKeyCreateWithData(
-            publicKey as CFData,
+            uncompressed as CFData,
             query as CFDictionary,
             &error) else {
-                throw ImportError.privateKeyParseFailed
+                throw ImportError.publicKeyParseFailed
         }
         try self.init(publicKey: key)
     }
@@ -167,6 +169,28 @@ open class Key {
     
     open func verify(data: Data, signature: Data) -> Bool {
         return publicKey.verify(message: data, signature: signature)
+    }
+    
+    public var compressedPublicKey: Data {
+        let data = self.publicKey.data
+        let x = data[1...32]
+        let last = data.last!
+        let flag = 2 + (last & 1)
+        return Data(bytes: [flag]) + x
+    }
+    
+    static func decompress(publicKey: Data) -> Data {
+        let prime  = BigUInt("115792089210356248762697446949407573530086143415290314195533631308867097853951")!
+        let b      = BigUInt("41058363725152142129326129780047268409114441015993725554835256314039467401291")!
+        let pIdent = BigUInt("28948022302589062190674361737351893382521535853822578548883407827216774463488")!
+        
+        let flag = publicKey.first! - 2
+        let x = BigUInt(publicKey[1...])
+        var y = (x.power(3) - x * 3 + b).power(pIdent, modulus: prime)
+        if y % 2 != flag {
+            y = prime - y
+        }
+        return Data(bytes: [0x04]) + publicKey[1...] + y.serialize()
     }
 }
 

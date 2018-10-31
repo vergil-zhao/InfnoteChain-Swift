@@ -30,7 +30,7 @@ open class ChainManager {
     
     open func add(chain: Blockchain) {
         let object = ChainObject()
-        object.publicKey = chain.key.publicKey.base58
+        object.publicKey = chain.key.compressedPublicKey.base58
         object.privateKey = chain.key.privateKey?.base58
         
         try! database.write {

@@ -39,7 +39,7 @@ open class Blockchain {
     
     required public init(key: Key) {
         self.key = key
-        self.id = key.publicKey.base58
+        self.id = key.compressedPublicKey.base58
 
         save()
     }

@@ -19,6 +19,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         procedure()
         
+        let publicKey = Data(base58: "dAmWyZTnQoVveTdo5C6RDL4fPtwyoDpfwbXL94Z2v5Z5")!
+        let uncompressed = Key.decompress(publicKey: publicKey)
+        print(uncompressed.base58)
+        
         return true
     }
 
