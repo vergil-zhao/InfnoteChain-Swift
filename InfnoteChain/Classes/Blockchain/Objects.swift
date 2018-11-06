@@ -84,14 +84,25 @@ open class Block: Object {
     }
     
     open var dataForHashing: Data {
-        var dict = self.dict
-        dict["hash"] = nil
-        dict["signature"] = nil
-        return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
+        var data = BlockData()
+        data.time = UInt64(time.timeIntervalSince1970)
+        data.chainID = chainID
+        data.height = UInt64(height)
+        data.payload = payload
+        data.prevHash = prevHash
+        return try! data.serializedData()
     }
     
     open var data: Data {
-        return try! JSONSerialization.data(withJSONObject: dict, options: .sortedKeys)
+        var data = BlockData()
+        data.time = UInt64(time.timeIntervalSince1970)
+        data.chainID = chainID
+        data.height = UInt64(height)
+        data.payload = payload
+        data.prevHash = prevHash
+        data.hash = blockHash
+        data.signature = signature
+        return try! data.serializedData()
     }
     
     open var size: Int {
@@ -132,6 +143,22 @@ open class Block: Object {
         self.chainID = chainID
         self.height = height
         self.payload = payload.data(using: .utf8)!
+    }
+    
+    public convenience init?(bytes: Data) {
+        self.init()
+        
+        guard let data = try? BlockData(serializedData: bytes) else {
+            return nil
+        }
+        
+        self.blockHash = data.hash
+        self.prevHash = data.prevHash
+        self.time = Date(timeIntervalSince1970: TimeInterval(data.time))
+        self.signature = data.signature
+        self.chainID = data.chainID
+        self.height = Int(data.height)
+        self.payload = data.payload
     }
     
     override open static func primaryKey() -> String? {

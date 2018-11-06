@@ -16,7 +16,9 @@ open class ChainManager {
     private var filterResultCache: [String: Results<Block>] = [:]
     private let lock = NSLock()
     
-    private init() {}
+    private init() {
+        print(database.configuration.fileURL)
+    }
     
     // MARK: - Chain operations
     
@@ -84,10 +86,12 @@ open class ChainManager {
     open func add(block: Block) {
         self.lock.lock()
         let result = self.block(ofChain: block.chainID, byHeight: block.height)
-        if !block.isValid && result == nil {
+        guard block.isValid && result == nil else {
+            self.lock.unlock()
             return
         }
         if block.height > 0, let prev = block.prev, prev.blockHash != block.prevHash {
+            self.lock.unlock()
             return
         }
         try! database.write {

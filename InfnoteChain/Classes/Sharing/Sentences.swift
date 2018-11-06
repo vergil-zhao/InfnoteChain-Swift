@@ -213,7 +213,7 @@ public class Speaking {
         
         override var dict: [String: Any] {
             return super.dict + [
-                "blocks": blocks.map { $0.dict },
+                "blocks": blocks.map { $0.data.base58 },
                 "end": end
             ]
         }
@@ -225,13 +225,14 @@ public class Speaking {
         }
         
         public convenience init?(with dict:[String: Any]) {
-            guard let blocks = dict["blocks"] as? [[String: Any]],
+            guard let blocks = dict["blocks"] as? [String],
                 let end = dict["end"] as? Bool else {
                 return nil
             }
             self.init()
-            for dict in blocks {
-                if let block = Block(dict: dict) {
+            for data in blocks {
+                if let bytes = Data(base58: data),
+                    let block = Block(bytes: bytes) {
                     self.blocks.append(block)
                 }
             }

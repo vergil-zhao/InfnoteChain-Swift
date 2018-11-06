@@ -43,4 +43,5 @@ TODO: Add long description of the pod here.
   s.dependency 'RealmSwift'
   s.dependency 'Starscream'
   s.dependency 'BigInt'
+  s.dependency 'SwiftProtobuf'
 end

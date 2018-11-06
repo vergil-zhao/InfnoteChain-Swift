@@ -29,10 +29,11 @@ public class Peer: Object {
         return "address"
     }
     
-    public convenience init?(address: String, port: Int = 32767) {
+    public convenience init?(address: String, port: Int = 32767, rank: Int = 100) {
         self.init()
         self.address = address
         self.port = port
+        self.rank = rank
         guard createDispatcher() else {
             return nil
         }
