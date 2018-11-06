@@ -78,8 +78,11 @@ open class Key {
     }
     
     // TODO: check if base58 string is valid
-    public convenience init(privateKey: String) throws {
-        try self.init(privateKey: Data(base58: privateKey)!)
+    public convenience init?(privateKey: String) {
+        guard let data = Data(base58: privateKey) else {
+            return nil
+        }
+        try? self.init(privateKey: data)
     }
     
     public convenience init(privateKey: Data) throws {
@@ -134,9 +137,10 @@ open class Key {
     
     // Just keep one private key for now
     // TODO: Keep more than one private keys
-    open func save() throws {
+    @discardableResult
+    open func save() -> Bool {
         guard let privateKey = self.privateKey else {
-            return
+            return false
         }
         
         Key.clean()
@@ -146,9 +150,7 @@ open class Key {
             kSecAttrApplicationTag as String: Key.defaultTag,
             kSecValueRef as String: privateKey
             ] as CFDictionary, nil)
-        guard status == errSecSuccess else {
-            throw KeyError.saveSecKeyItemFailed(status)
-        }
+        return status == errSecSuccess
     }
     
     open func sign(data: Data) throws -> Data {

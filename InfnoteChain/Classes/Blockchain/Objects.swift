@@ -14,7 +14,7 @@ open class ChainObject: Object {
     
     open var key: Key {
         if let sk = privateKey {
-            return try! Key(privateKey: sk)
+            return Key(privateKey: sk)!
         }
         return try! Key(publicKey: publicKey)
     }
