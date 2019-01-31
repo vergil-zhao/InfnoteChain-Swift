@@ -17,11 +17,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
         
-        procedure()
-        
-        let publicKey = Data(base58: "dAmWyZTnQoVveTdo5C6RDL4fPtwyoDpfwbXL94Z2v5Z5")!
-        let uncompressed = Key.decompress(publicKey: publicKey)
-        print(uncompressed.base58)
+        Service.shared.start()
         
         return true
     }
@@ -49,9 +45,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 
-}
-
-func procedure() {
-    ShareManager.shared.sharing()
 }
 

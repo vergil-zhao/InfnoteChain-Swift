@@ -7,224 +7,113 @@
 //
 
 import UIKit
-import BigInt
+import OpenSSL
 
-open class Key {
-    public static let defaultTag = "com.infnote.keys.default"
-    public static let keySizeInBits = 256
+public class Key {
     
-    public enum ImportError: Error {
-        case cannotExtractPublicKey
-        case publicKeyParseFailed
-        case privateKeyParseFailed
+    public var raw: Data
+    public var publicKey: Data {
+        return SECP256K1.privateToPublic(privateKey: raw, compressed: true)!
+    }
+    public var wif: String {
+        var payload = Data([0x80]) + raw + Data([0x01])
+        let checksum = payload.sha256.sha256.prefix(4)
+        return (payload + checksum).base58
+    }
+    public var address: String {
+        return Key.generateAddress(publicKey: publicKey)
     }
     
-    public enum KeyError: Error {
-        case loadSecKeyItemFailed(Error)
-        case saveSecKeyItemFailed(OSStatus)
-        case signFailed(Error)
-        case generateKeyFailed(Error)
-        case onlyPublicKey
+    private static func generateRandomPrivateKeyData() -> Data {
+        // Generate Random Private Key
+        func check(_ vch: [UInt8]) -> Bool {
+            let max: [UInt8] = [
+                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+                0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
+                0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x40
+            ]
+            var fIsZero = true
+            for byte in vch where byte != 0 {
+                fIsZero = false
+                break
+            }
+            if fIsZero {
+                return false
+            }
+            for (index, byte) in vch.enumerated() {
+                if byte < max[index] {
+                    return true
+                }
+                if byte > max[index] {
+                    return false
+                }
+            }
+            return true
+        }
+        
+        let count = 32
+        var key = Data(count: count)
+        var status: Int32 = 0
+        repeat {
+            status = key.withUnsafeMutableBytes { SecRandomCopyBytes(kSecRandomDefault, count, $0) }
+        } while (status != 0 || !check([UInt8](key)))
+        
+        return key
     }
 
-    public let publicKey: SecKey
-    public var privateKey: SecKey?
-    
-    open var canSign: Bool {
-        return privateKey != nil
+    public static func loadDefaultKey() -> Key? {
+        if let wif = UserDefaults.standard.string(forKey: "com.infnote.default.wif") {
+            return Key(wif: wif)
+        }
+        return nil
     }
     
-    open class func loadDefaultKey() -> Key? {
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching([
-            kSecClass as String: kSecClassKey,
-            kSecAttrApplicationTag as String: defaultTag,
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeySizeInBits as String: keySizeInBits,
-            kSecReturnRef as String: true
-            ] as CFDictionary, &item)
-        guard status == errSecSuccess else {
+    public init() {
+        raw = Key.generateRandomPrivateKeyData()
+    }
+    
+    public init?(wif: String) {
+        guard let data = Data(base58: wif) else {
             return nil
         }
-        return try? Key(privateKey: item as! SecKey)
-    }
-    
-    open class func clean() {
-        let attributes: [String: Any] = [
-            kSecClass as String: kSecClassKey,
-            kSecAttrApplicationTag as String: defaultTag,
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeySizeInBits as String: keySizeInBits
-        ]
-        SecItemDelete(attributes as CFDictionary)
-    }
-    
-    public init() throws {
-        let attributes: [String: Any] =
-            [kSecAttrKeyType as String:            kSecAttrKeyTypeECSECPrimeRandom,
-             kSecAttrKeySizeInBits as String:      Key.keySizeInBits,
-             kSecPrivateKeyAttrs as String:
-                [kSecAttrIsPermanent as String:    true,
-                 kSecAttrEffectiveKeySize as String: Key.keySizeInBits]
-        ]
-        
-        var error: Unmanaged<CFError>?
-        guard let privateKey = SecKeyCreateRandomKey(attributes as CFDictionary, &error) else {
-            throw KeyError.generateKeyFailed(error!.takeRetainedValue() as Error)
-        }
-        
-        self.privateKey = privateKey
-        self.publicKey = SecKeyCopyPublicKey(privateKey)!
-    }
-    
-    // TODO: check if base58 string is valid
-    public convenience init?(privateKey: String) {
-        guard let data = Data(base58: privateKey) else {
+        let checksum = Data(data.suffix(4))
+        let payload = data.prefix(data.count - 4)
+        guard payload.sha256.sha256.prefix(4) == checksum else {
             return nil
         }
-        try? self.init(privateKey: data)
+        raw = payload.subdata(in: 1..<payload.count - 1)
     }
     
-    public convenience init(privateKey: Data) throws {
-        let query: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeyClass as String: kSecAttrKeyClassPrivate,
-            kSecAttrKeySizeInBits as String: Key.keySizeInBits
-        ]
-        var error: Unmanaged<CFError>?
-        guard let key = SecKeyCreateWithData(
-            privateKey as CFData,
-            query as CFDictionary,
-            &error) else {
-            throw ImportError.privateKeyParseFailed
+    public func sign(message: Data) -> Data {
+        return SECP256K1.signForRecovery(hash: message.sha256, privateKey: raw, useExtraEntropy: false).serializedSignature!
+    }
+    
+    public static func recover(signature: Data, message: Data) -> String {
+        return generateAddress(publicKey: SECP256K1.recoverPublicKey(hash: message.sha256, signature: signature, compressed: true)!)
+    }
+    
+    static func generateAddress(publicKey: Data) -> String {
+        var data = Data(count: Int(RIPEMD160_DIGEST_LENGTH))
+        data.withUnsafeMutableBytes { result in
+            publicKey.sha256.withUnsafeBytes {
+                RIPEMD160($0, 32, result)
+            }
         }
-        try self.init(privateKey: key)
+        data = Data([0x00]) + data
+        return (data + data.sha256.sha256.prefix(4)).base58
     }
     
-    // TODO: check if base58 string is valid
-    public convenience init(publicKey: String) throws {
-        try self.init(publicKey: Data(base58: publicKey)!)
+    public static func verify(address: String, signature: Data, message: Data) -> Bool {
+        return address == Key.recover(signature: signature, message: message)
     }
     
-    public convenience init(publicKey: Data) throws {
-        let uncompressed = Key.decompress(publicKey: publicKey)
-        let query: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
-            kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
-            kSecAttrKeySizeInBits as String: Key.keySizeInBits
-        ]
-        var error: Unmanaged<CFError>?
-        guard let key = SecKeyCreateWithData(
-            uncompressed as CFData,
-            query as CFDictionary,
-            &error) else {
-                throw ImportError.publicKeyParseFailed
-        }
-        try self.init(publicKey: key)
+    public func save() {
+        UserDefaults.standard.set(wif, forKey: "com.infnote.default.wif")
     }
     
-    public init(privateKey: SecKey) throws {
-        self.privateKey = privateKey
-        guard let publicKey = SecKeyCopyPublicKey(privateKey) else {
-            throw ImportError.cannotExtractPublicKey
-        }
-        self.publicKey = publicKey
-    }
-    
-    public init(publicKey: SecKey) throws {
-        self.publicKey = publicKey
-    }
-    
-    // Just keep one private key for now
-    // TODO: Keep more than one private keys
-    @discardableResult
-    open func save() -> Bool {
-        guard let privateKey = self.privateKey else {
-            return false
-        }
-        
-        Key.clean()
-        
-        let status = SecItemAdd([
-            kSecClass as String: kSecClassKey,
-            kSecAttrApplicationTag as String: Key.defaultTag,
-            kSecValueRef as String: privateKey
-            ] as CFDictionary, nil)
-        return status == errSecSuccess
-    }
-    
-    open func sign(data: Data) throws -> Data {
-        guard let privateKey = self.privateKey else {
-            throw KeyError.onlyPublicKey
-        }
-        
-        var error: Unmanaged<CFError>?
-        guard let signature = SecKeyCreateSignature(
-            privateKey,
-            .ecdsaSignatureMessageX962SHA256,
-            data as CFData,
-            &error) as Data? else {
-            throw KeyError.signFailed(error!.takeRetainedValue() as Error)
-        }
-        return signature
-    }
-    
-    open func verify(data: Data, signature: Data) -> Bool {
-        return publicKey.verify(message: data, signature: signature)
-    }
-    
-    public var compressedPublicKey: Data {
-        let data = self.publicKey.data
-        let x = data[1...32]
-        let last = data.last!
-        let flag = 2 + (last & 1)
-        return Data(bytes: [flag]) + x
-    }
-    
-    static func decompress(publicKey: Data) -> Data {
-        let prime  = BigUInt("115792089210356248762697446949407573530086143415290314195533631308867097853951")!
-        let b      = BigUInt("41058363725152142129326129780047268409114441015993725554835256314039467401291")!
-        let pIdent = BigUInt("28948022302589062190674361737351893382521535853822578548883407827216774463488")!
-        
-        let flag = publicKey.first! - 2
-        let x = BigUInt(publicKey[1...])
-        var y = (x.power(3) - x * 3 + b).power(pIdent, modulus: prime)
-        if y % 2 != flag {
-            y = prime - y
-        }
-        return Data(bytes: [0x04]) + publicKey[1...] + y.serialize()
-    }
-}
-
-
-public extension SecKey {
-    
-    // TODO: Add attribute judgement to avoid exceptions
-    public var data: Data {
-        return SecKeyCopyExternalRepresentation(self, nil)! as Data
-    }
-    
-    public var hex: String {
-        return data.hex
-    }
-    
-    public var base58: String {
-        return data.base58
-    }
-    
-    // TODO: Add attribute judgement & remove print
-    public func verify(message: Data, signature: Data) -> Bool {
-        var error: Unmanaged<CFError>?
-        guard SecKeyVerifySignature(self,
-                                    .ecdsaSignatureMessageX962SHA256,
-                                    message as CFData,
-                                    signature as CFData,
-                                    &error) else {
-                                        print(error!.takeRetainedValue() as Error)
-                                        return false
-        }
-        
-        return true
+    public static func clean() {
+        UserDefaults.standard.set(nil, forKey: "com.infnote.default.wif")
     }
 }
 

@@ -8,29 +8,49 @@
 import Foundation
 import RealmSwift
 
-open class ChainObject: Object {
-    @objc dynamic var publicKey: String = ""
-    @objc dynamic var privateKey: String? = nil
+public class Chain: Object {
+    @objc public dynamic var id: String = ""
+    @objc public dynamic var wif: String? = nil
+    @objc public dynamic var maxCount: Int = 0
     
-    open var key: Key {
-        if let sk = privateKey {
-            return Key(privateKey: sk)!
-        }
-        return try! Key(publicKey: publicKey)
+    public var count: Int {
+        return Storage.shared.getBlockCount(id: id)
     }
     
-    open var chain: Blockchain {
-        return Blockchain(key: key)
+    open var key: Key? {
+        if let sk = wif, let key = Key(wif: sk) {
+            return key
+        }
+        return nil
     }
     
     override open static func primaryKey() -> String? {
-        return "publicKey"
+        return "id"
+    }
+    
+    public func validate(block: Block) -> Bool {
+        return block.validate() && block.chainID == id
+    }
+    
+    public subscript(height: Int) -> Block? {
+        return Storage.shared.getBlock(id: id, height: height)
+    }
+    
+    public func save(block: Block) {
+        if validate(block: block) {
+            Storage.shared.save(block: block)
+        }
+        NotificationCenter.default.post(name: .init("com.infnote.block.saved"), object: nil)
+    }
+    
+    public func save() {
+        Storage.shared.save(chain: self)
     }
     
     override open var description: String {
-        var dict = ["public_key": publicKey]
-        if let sk = privateKey {
-            dict["private_key"] = sk
+        var dict = ["chain_id": id]
+        if let sk = wif {
+            dict["wif"] = sk
         }
         let jsonData = try! JSONSerialization.data(
             withJSONObject: dict,
@@ -46,7 +66,7 @@ open class Block: Object {
     @objc public dynamic var prevHash: String    = ""
     
     // it should be a timestamp when hashing
-    @objc public dynamic var time: Date          = Date()
+    @objc public dynamic var time: Int           = 0
     @objc public dynamic var signature: String   = ""
     
     // chain id is base58 encoded public key of chain owner
@@ -60,22 +80,13 @@ open class Block: Object {
         return height == 0
     }
     
-    open var prev: Block? {
-        return ChainManager.shared.block(ofChain: chainID, byHeight: height - 1)
-    }
-    
-    open var next: Block? {
-        return ChainManager.shared.block(ofChain: chainID, byHeight: height + 1)
-    }
-    
     open var dict: [String: Any] {
         var dict = [
             "signature": signature,
             "hash": blockHash,
-            "time": Int(time.timeIntervalSince1970),
-            "chain_id": chainID,
+            "time": time,
             "height": height,
-            "payload": String(data: payload, encoding: .utf8) ?? ""
+            "payload": payload.base58
             ] as [String: Any]
         if !isGenesis {
             dict["prev_hash"] = prevHash
@@ -84,36 +95,22 @@ open class Block: Object {
     }
     
     open var dataForHashing: Data {
-        var data = BlockData()
-        data.time = UInt64(time.timeIntervalSince1970)
-        data.chainID = chainID
-        data.height = UInt64(height)
-        data.payload = payload
-        data.prevHash = prevHash
-        return try! data.serializedData()
-    }
-    
-    open var data: Data {
-        var data = BlockData()
-        data.time = UInt64(time.timeIntervalSince1970)
-        data.chainID = chainID
-        data.height = UInt64(height)
-        data.payload = payload
-        data.prevHash = prevHash
-        data.hash = blockHash
-        data.signature = signature
-        return try! data.serializedData()
+        let pre = "\(height)\(time)".data(using: .ascii)!
+        if prevHash.count > 0 {
+            return pre + Base58.decode(prevHash)! + payload
+        }
+        return pre + payload
     }
     
     open var size: Int {
-        return data.count
+        return payload.count
     }
     
-    open var isValid: Bool {
-        let key = try! Key(publicKey: chainID)
+    public func validate() -> Bool {
+        let chainID = Key.recover(signature: Data(base58: signature)!, message: dataForHashing)
         return (height == 0 || !prevHash.isEmpty)
             && dataForHashing.sha256.base58 == blockHash
-            && key.verify(data: dataForHashing, signature: Data(base58: signature)!)
+            && chainID.count > 0
     }
     
     public convenience init?(jsonData data: Data) {
@@ -130,7 +127,6 @@ open class Block: Object {
         guard let blockHash = dict["hash"] as? String,
             let time = dict["time"] as? Int,
             let signature = dict["signature"] as? String,
-            let chainID = dict["chain_id"] as? String,
             let height = dict["height"] as? Int,
             let payload = dict["payload"] as? String else {
             return nil
@@ -138,27 +134,11 @@ open class Block: Object {
         
         self.blockHash = blockHash
         self.prevHash = dict["prev_hash"] as? String ?? ""
-        self.time = Date(timeIntervalSince1970: TimeInterval(time))
+        self.time = time
         self.signature = signature
-        self.chainID = chainID
         self.height = height
-        self.payload = payload.data(using: .utf8)!
-    }
-    
-    public convenience init?(bytes: Data) {
-        self.init()
-        
-        guard let data = try? BlockData(serializedData: bytes) else {
-            return nil
-        }
-        
-        self.blockHash = data.hash
-        self.prevHash = data.prevHash
-        self.time = Date(timeIntervalSince1970: TimeInterval(data.time))
-        self.signature = data.signature
-        self.chainID = data.chainID
-        self.height = Int(data.height)
-        self.payload = data.payload
+        self.payload = Base58.decode(payload)!
+        self.chainID = Key.recover(signature: Data(base58: signature)!, message: dataForHashing)
     }
     
     override open static func primaryKey() -> String? {

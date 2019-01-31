@@ -23,9 +23,7 @@ class AddPeerViewController: UITableViewController {
     
     @IBAction func addButtonTouched(_ sender: Any) {
         guard let address = addressField.text,
-            let portString = portField.text,
-            let port = Int(portString),
-            let peer = Peer(address: address, port: port) else {
+            let peer = Peer(address: address) else {
             return
         }
         PeerManager.shared.addOrUpdate(peer)

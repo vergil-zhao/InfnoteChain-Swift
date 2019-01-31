@@ -9,10 +9,8 @@
 /* Begin PBXBuildFile section */
 		01FB85D67AFADD154C2AF076 /* Pods_InfnoteChain_Tests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D83C578E8DF5BDFB8B941F04 /* Pods_InfnoteChain_Tests.framework */; };
 		447831CE217DFFA400ADE31A /* AddPeerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 447831CD217DFFA400ADE31A /* AddPeerViewController.swift */; };
-		44A7D7AC215F7E1900CC9975 /* NewChainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */; };
 		44A7D7B221608E8B00CC9975 /* BlocksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */; };
 		44A7D7B42160A33D00CC9975 /* BlockDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */; };
-		44A7D7B62160AE6500CC9975 /* NewBlockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */; };
 		44A7D7B82160CA5B00CC9975 /* AddChainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */; };
 		44A7D825217DFDD100CC9975 /* PeersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A7D824217DFDD100CC9975 /* PeersViewController.swift */; };
 		44F8CC66215F633000610E84 /* ChainsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44F8CC65215F633000610E84 /* ChainsViewController.swift */; };
@@ -39,10 +37,8 @@
 		2BED7AB8D18363EF6D6089BB /* Pods-InfnoteChain_Example.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-InfnoteChain_Example.release.xcconfig"; path = "Pods/Target Support Files/Pods-InfnoteChain_Example/Pods-InfnoteChain_Example.release.xcconfig"; sourceTree = "<group>"; };
 		31D039921AB139B7F2D66EBB /* Pods_InfnoteChain_Example.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_InfnoteChain_Example.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		447831CD217DFFA400ADE31A /* AddPeerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddPeerViewController.swift; sourceTree = "<group>"; };
-		44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewChainViewController.swift; sourceTree = "<group>"; };
 		44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlocksViewController.swift; sourceTree = "<group>"; };
 		44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BlockDetailViewController.swift; sourceTree = "<group>"; };
-		44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewBlockViewController.swift; sourceTree = "<group>"; };
 		44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddChainViewController.swift; sourceTree = "<group>"; };
 		44A7D824217DFDD100CC9975 /* PeersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeersViewController.swift; sourceTree = "<group>"; };
 		44F8CC65215F633000610E84 /* ChainsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChainsViewController.swift; sourceTree = "<group>"; };
@@ -98,11 +94,9 @@
 			isa = PBXGroup;
 			children = (
 				44F8CC65215F633000610E84 /* ChainsViewController.swift */,
-				44A7D7AB215F7E1900CC9975 /* NewChainViewController.swift */,
 				44A7D7B72160CA5B00CC9975 /* AddChainViewController.swift */,
 				44A7D7B121608E8B00CC9975 /* BlocksViewController.swift */,
 				44A7D7B32160A33D00CC9975 /* BlockDetailViewController.swift */,
-				44A7D7B52160AE6500CC9975 /* NewBlockViewController.swift */,
 				44A7D824217DFDD100CC9975 /* PeersViewController.swift */,
 				447831CD217DFFA400ADE31A /* AddPeerViewController.swift */,
 			);
@@ -356,20 +350,16 @@
 			);
 			inputPaths = (
 				"${SRCROOT}/Pods/Target Support Files/Pods-InfnoteChain_Example/Pods-InfnoteChain_Example-frameworks.sh",
-				"${BUILT_PRODUCTS_DIR}/BigInt/BigInt.framework",
 				"${BUILT_PRODUCTS_DIR}/InfnoteChain/InfnoteChain.framework",
 				"${BUILT_PRODUCTS_DIR}/Realm/Realm.framework",
 				"${BUILT_PRODUCTS_DIR}/RealmSwift/RealmSwift.framework",
-				"${BUILT_PRODUCTS_DIR}/SipHash/SipHash.framework",
 				"${BUILT_PRODUCTS_DIR}/Starscream/Starscream.framework",
 			);
 			name = "[CP] Embed Pods Frameworks";
 			outputPaths = (
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/BigInt.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/InfnoteChain.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Realm.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/RealmSwift.framework",
-				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SipHash.framework",
 				"${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/Starscream.framework",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -385,10 +375,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				44F8CC66215F633000610E84 /* ChainsViewController.swift in Sources */,
-				44A7D7AC215F7E1900CC9975 /* NewChainViewController.swift in Sources */,
 				44A7D825217DFDD100CC9975 /* PeersViewController.swift in Sources */,
 				44A7D7B42160A33D00CC9975 /* BlockDetailViewController.swift in Sources */,
-				44A7D7B62160AE6500CC9975 /* NewBlockViewController.swift in Sources */,
 				44A7D7B221608E8B00CC9975 /* BlocksViewController.swift in Sources */,
 				607FACD61AFB9204008FA782 /* AppDelegate.swift in Sources */,
 				447831CE217DFFA400ADE31A /* AddPeerViewController.swift in Sources */,

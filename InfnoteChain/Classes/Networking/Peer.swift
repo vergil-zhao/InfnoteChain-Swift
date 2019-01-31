@@ -9,46 +9,69 @@ import Foundation
 import RealmSwift
 import Starscream
 
+public class Service {
+    public static var shared = Service()
+    
+    private var peers: [Peer] = []
+    
+    public func start() {}
+}
 
 public class Peer: Object {
     
     @objc open dynamic var address: String = ""
-    @objc open dynamic var port: Int = 80
     @objc open dynamic var rank: Int = 100
+    @objc open dynamic var last: Int = 0
     
-    public var dict: [String: Any] {
-        return [
-            "address": address,
-            "port": port
-        ]
+    private var socket: WebSocket?
+    
+    public var isConnected: Bool {
+        if socket == nil {
+            return false
+        }
+        return socket!.isConnected
     }
-    
-    var dispatcher: Dispatcher! = nil
     
     public override static func primaryKey() -> String? {
         return "address"
     }
     
-    public convenience init?(address: String, port: Int = 32767, rank: Int = 100) {
+    public convenience init?(address: String, rank: Int = 100) {
+        guard let url = URL(string: address),
+            let scheme = url.scheme,
+            scheme == "ws" || scheme == "wss" else {
+                return nil
+        }
+        
         self.init()
         self.address = address
-        self.port = port
         self.rank = rank
-        guard createDispatcher() else {
-            return nil
-        }
-    }
-    
-    func createDispatcher() -> Bool {
-        guard let url = URL(string: "ws://\(address):\(port)") else {
-            return false
-        }
-        self.dispatcher = Dispatcher(with: WebSocket(url: url))
-        return true
+        
     }
     
     public static func == (lhs: Peer, rhs: Peer) -> Bool {
-        return lhs.address == rhs.address && lhs.port == rhs.port
+        return lhs.address == rhs.address
+    }
+    
+    public func connect() {
+        socket = WebSocket(url: URL(string: address)!)
+        socket!.connect()
+        socket!.onConnect = {
+            NotificationCenter.default.post(name: .init("com.infnote.peer.connected"), object: nil)
+        }
+        socket!.onText = {
+            for data in handleJSON(message: $0, sender: self) {
+                self.socket!.write(data: data)
+            }
+        }
+        socket!.onDisconnect = {
+            print($0)
+            NotificationCenter.default.post(name: .init("com.infnote.peer.disconnected"), object: nil)
+        }
+    }
+    
+    public func disconnect() {
+        socket?.disconnect()
     }
 }
 

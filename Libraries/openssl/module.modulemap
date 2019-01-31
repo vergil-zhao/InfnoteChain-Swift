@@ -1,0 +1,4 @@
+module OpenSSL {
+    private header "include/openssl/ripemd.h"
+    link "crypto"
+}

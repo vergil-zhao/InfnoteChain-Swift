@@ -10,41 +10,23 @@ import UIKit
 import InfnoteChain
 
 class ChainsViewController: UITableViewController {
-    
-    let manager = ChainManager.shared
 
+    var chains: [Chain] = []
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         tableView.tableFooterView = UIView()
         
-        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "InfnoteChain.Block.Saved"), object: nil, queue: OperationQueue.main) { _ in
+        NotificationCenter.default.addObserver(forName: .init(rawValue: "com.infnote.block.saved"), object: nil, queue: OperationQueue.main) { _ in
             self.tableView.reloadData()
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
         
-        tableView.reloadData()
-    }
-    
-    @IBAction func addButtonTouched(_ sender: Any) {
-        let alert = UIAlertController(title: "Add Chain", message: nil, preferredStyle: .actionSheet)
-        alert.addAction(UIAlertAction(title: "Add a exist chain", style: .default, handler: { _ in
-            self.navigationController?.pushViewController((self.storyboard?.instantiateViewController(withIdentifier: "add_chain"))!, animated: true)
-        }))
-        alert.addAction(UIAlertAction(title: "Create a new chain", style: .default, handler: { _ in
-            self.navigationController?.pushViewController((self.storyboard?.instantiateViewController(withIdentifier: "create_chain"))!, animated: true)
-        }))
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        present(alert, animated: true)
+        chains = Storage.shared.getAllChains()
     }
     
     @IBAction func debugButtonTouched(_ sender: Any) {
-        let alert = UIAlertController(title: "Realm is located at", message: manager.storageFileURL.absoluteString, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-        present(alert, animated: true)
+        print(Storage.shared.fileURL)
     }
     
     // MARK: - Table view data source
@@ -54,22 +36,16 @@ class ChainsViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return manager.allChains.count
+        return chains.count
     }
 
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! ChainCell
 
-        let chain = manager.allChains[indexPath.row].chain
-        if let info = chain.info, let name = info["name"] as? String {
-            cell.nameLabel.text = name
-        }
-        else {
-            cell.nameLabel.text = chain.key.publicKey.base58
-        }
-        cell.heightLabel.text = "\(chain.height) bks"
-
+        cell.nameLabel.text = chains[indexPath.row].id
+        cell.heightLabel.text = "\(chains[indexPath.row].count)"
+        
         return cell
     }
     
@@ -83,24 +59,24 @@ class ChainsViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            let alert = UIAlertController(title: "Removing", message: "Remove this chain and its all blocks from local?", preferredStyle: .alert)
-            alert.addAction(UIAlertAction(title: "Remove", style: .destructive, handler: { _ in
-                self.manager.remove(chain: self.manager.allChains[indexPath.row])
-                self.tableView.beginUpdates()
-                self.tableView.deleteRows(at: [indexPath], with: .left)
-                self.tableView.endUpdates()
-            }))
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-            present(alert, animated: true)
+            Storage.shared.clean(chain: chains[indexPath.row])
+            chains.remove(at: indexPath.row)
+            self.tableView.beginUpdates()
+            self.tableView.deleteRows(at: [indexPath], with: .left)
+            self.tableView.endUpdates()
         }
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "chain_detail" {
-            let controller = segue.destination as! BlocksViewController
-            let cell = tableView.cellForRow(at: tableView.indexPathForSelectedRow!) as! ChainCell
-            controller.title = cell.nameLabel.text
-            controller.chain = manager.allChains[tableView.indexPathForSelectedRow!.row].chain
+            let vc = segue.destination as! BlocksViewController
+            vc.chain = chains[self.tableView.indexPathForSelectedRow!.row]
+        } else if segue.identifier == "add_chain" {
+            let vc = segue.destination as! AddChainViewController
+            vc.onSave = {
+                self.chains = Storage.shared.getAllChains()
+                self.tableView.reloadData()
+            }
         }
     }
 }

@@ -28,14 +28,13 @@ class BlockDetailViewController: UITableViewController {
     }
     
     @objc func doneButtonTouched(_ sender: Any) {
-        ChainManager.shared.add(block: block)
         navigationController?.dismiss(animated: true)
     }
     
     @IBAction func exportButtonTouched(_ sender: Any) {
-        let content = String(data: block.data, encoding: .utf8)
-        UIPasteboard.general.string = content
-        let alert = UIAlertController(title: "Block #\(block.height) JSON copied in Pastboard", message: content, preferredStyle: .alert)
+        let content = try! JSONSerialization.data(withJSONObject: block.dict, options: [])
+        UIPasteboard.general.string = String(data: content, encoding: .utf8)
+        let alert = UIAlertController(title: "Block #\(block.height) JSON copied in Pastboard", message: "", preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
         present(alert, animated: true)
     }
@@ -55,8 +54,11 @@ class BlockDetailViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! CommonInfoCell
         if indexPath.section == 0 {
-            cell.prepareViews(content: block!.isValid ? "Valid" : "Invalid")
-            cell.textView.textColor = block!.isValid ? .green : .red
+            cell.prepareViews(content: block.validate() ? "Valid" : "Invalid")
+            cell.textView.textColor = block.validate() ? .green : .red
+        }
+        else if indexPath.section == 1 {
+            cell.prepareViews(content: block.chainID)
         }
         else if indexPath.section == 2 {
             cell.prepareViews(content: "\(block.height)")
@@ -64,7 +66,7 @@ class BlockDetailViewController: UITableViewController {
         else if indexPath.section == 3 {
             let formatter = DateFormatter()
             formatter.dateFormat = "YYYY-MM-dd HH:mm:ss"
-            cell.prepareViews(content: formatter.string(from: block.time))
+            cell.prepareViews(content: formatter.string(from: Date(timeIntervalSince1970: TimeInterval(block.time))))
         }
         else if indexPath.section == 7 {
             if let json = try? JSONSerialization.jsonObject(with: block.payload, options: []) {

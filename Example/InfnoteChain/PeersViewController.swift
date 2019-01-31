@@ -18,16 +18,12 @@ class PeersViewController: UITableViewController {
         
         tableView.tableFooterView = UIView()
         
-        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "InfnoteChain.Peer.Connected"), object: nil, queue: OperationQueue.main) { _ in
+        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "com.infnote.peer.connected"), object: nil, queue: OperationQueue.main) { _ in
             self.tableView.reloadData()
         }
-        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "InfnoteChain.Peer.Disconnected"), object: nil, queue: OperationQueue.main) { _ in
+        NotificationCenter.default.addObserver(forName: NSNotification.Name(rawValue: "com.infnote.peer.disconnected"), object: nil, queue: OperationQueue.main) { _ in
             self.tableView.reloadData()
         }
-    }
-    
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
         
         peers = Array<Peer>(PeerManager.shared.allPeers)
         tableView.reloadData()
@@ -35,11 +31,10 @@ class PeersViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let peer = peers[indexPath.row]
-        if ShareManager.shared.isConnected(with: peer) {
-            ShareManager.shared.disconnect(to: peer)
-        }
-        else {
-            ShareManager.shared.connect(to: peer)
+        if peer.isConnected {
+            peer.disconnect()
+        } else {
+            peer.connect()
         }
     }
     
@@ -50,12 +45,11 @@ class PeersViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         let peer = peers[indexPath.row]
-        cell.textLabel?.text = "\(peer.address):\(peer.port)"
+        cell.textLabel?.text = "\(peer.address)"
         cell.detailTextLabel?.text = "\(peer.rank)"
-        if ShareManager.shared.isConnected(with: peer) {
+        if peer.isConnected {
             cell.accessoryType = .checkmark
-        }
-        else {
+        } else {
             cell.accessoryType = .none
         }
         return cell
@@ -67,7 +61,9 @@ class PeersViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCell.EditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
-            PeerManager.shared.remove(peers[indexPath.row])
+            let peer = peers[indexPath.row]
+            peer.disconnect()
+            PeerManager.shared.remove(peer)
             peers.remove(at: indexPath.row)
             tableView.deleteRows(at: [indexPath], with: .left)
         }
