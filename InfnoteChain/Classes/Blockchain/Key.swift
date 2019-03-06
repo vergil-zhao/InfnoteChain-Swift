@@ -83,6 +83,9 @@ public class Key {
             return nil
         }
         raw = payload.subdata(in: 1..<payload.count - 1)
+        guard raw.count == 32 else {
+            return nil
+        }
     }
     
     public func sign(message: Data) -> Data {
