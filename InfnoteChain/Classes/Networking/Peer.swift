@@ -23,7 +23,7 @@ public class Peer: Object {
     @objc open dynamic var rank: Int = 100
     @objc open dynamic var last: Int = 0
     
-    private var socket: WebSocket?
+    var socket: WebSocket?
     
     public var isConnected: Bool {
         if socket == nil {
@@ -57,7 +57,9 @@ public class Peer: Object {
         socket = WebSocket(url: URL(string: address)!)
         socket!.connect()
         socket!.onConnect = {
+            PeerManager.onlinePeers.append(self)
             NotificationCenter.default.post(name: .init("com.infnote.peer.connected"), object: nil)
+            self.socket?.write(data: try! JSONSerialization.data(withJSONObject: Message(behavior: Info()).dict, options: []))
         }
         socket!.onText = {
             for data in handleJSON(message: $0, sender: self) {
@@ -65,6 +67,15 @@ public class Peer: Object {
             }
         }
         socket!.onDisconnect = {
+            var index = 0
+            for (i, peer) in PeerManager.onlinePeers.enumerated() {
+                if peer == self {
+                    index = i
+                    break
+                }
+            }
+            PeerManager.onlinePeers.remove(at: index)
+            
             print($0)
             NotificationCenter.default.post(name: .init("com.infnote.peer.disconnected"), object: nil)
         }
@@ -79,13 +90,23 @@ public class PeerManager {
     
     public static var shared = PeerManager()
     
+    static var onlinePeers: [Peer] = []
+    
     public var allPeers: Results<Peer> {
         return database.objects(Peer.self).sorted(byKeyPath: "rank", ascending: false)
     }
     
     let database = try! Realm()
     
-    private init() {}
+    private init() {
+        BroadcastBlock.callback = { broadcast in
+            for peer in PeerManager.onlinePeers {
+                if peer != broadcast.sender {
+                    peer.socket?.write(data: try! JSONSerialization.data(withJSONObject: Message(behavior: broadcast).dict, options: []))
+                }
+            }
+        }
+    }
     
     public func addOrUpdate(_ peer: Peer) {
         try! database.write {

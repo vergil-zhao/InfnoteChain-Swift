@@ -16,6 +16,11 @@ func handleJSON(message: String, sender: Peer) -> [Data] {
         return []
     }
     
+    if let broadcast = behavior as? BroadcastBlock {
+        broadcast.id = msg.id
+        broadcast.sender = sender
+    }
+    
     if let err = behavior.validate() {
         return [try! JSONSerialization.data(withJSONObject: err.dict(), options: [])]
     }

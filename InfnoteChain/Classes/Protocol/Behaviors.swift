@@ -35,6 +35,20 @@ class Info: Behavior {
         self.fullNode = fullNode
     }
     
+    init() {
+        var chains: [String: Int] = [:]
+        
+        self.version = "1.1"
+        self.peers = 0
+        self.chains = Storage.shared.getAllChains().reduce(chains, { (result: [String: Int], chain: Chain) in
+            var r = result
+            r[chain.id] = chain.count
+            return r
+        })
+        self.platform = ["system": "iOS", "version": UIDevice.current.systemVersion]
+        self.fullNode = false
+    }
+    
     func validate() -> ErrorMessage? {
         if version != "1.1" {
             return ErrorMessage(.IncompatibleProtocolVersion, "only accept v1.1 protocol")
@@ -279,6 +293,11 @@ class ResponseBlocks: Behavior {
 
 class BroadcastBlock: Behavior {
     var block: [String: Any] = [:]
+    var id: String?
+    var sender: Peer?
+    
+    private static var idCache: [String: Bool] = [:]
+    static var callback: ((BroadcastBlock) -> Void)?
     
     init?(dict: [String: Any]) {
         guard let block = dict["block"] as? [String: Any] else {
@@ -289,6 +308,14 @@ class BroadcastBlock: Behavior {
     }
     
     func validate() -> ErrorMessage? {
+        guard let identifier = id else {
+            return ErrorMessage(.InvalidBehavior, "missing broadcast id")
+        }
+        
+        guard BroadcastBlock.idCache[identifier] == nil else {
+            return ErrorMessage(.InvalidBehavior, "used broadcast id")
+        }
+        
         guard let block = Block(dict: block) else {
             return ErrorMessage(.JSONDecode, "invalid json data for block")
         }
@@ -308,6 +335,8 @@ class BroadcastBlock: Behavior {
         let block = Block(dict: self.block)!
         let chain = Storage.shared.getChain(id: block.chainID)!
         chain.save(block: block)
+        BroadcastBlock.idCache[id!] = true
+        BroadcastBlock.callback?(self)
         
         return []
     }

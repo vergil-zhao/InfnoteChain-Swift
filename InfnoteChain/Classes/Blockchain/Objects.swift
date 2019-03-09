@@ -86,7 +86,7 @@ open class Block: Object {
             "hash": blockHash,
             "time": time,
             "height": height,
-            "payload": payload.base58
+            "payload": payload.base64EncodedString()
             ] as [String: Any]
         if !isGenesis {
             dict["prev_hash"] = prevHash
@@ -128,7 +128,8 @@ open class Block: Object {
             let time = dict["time"] as? Int,
             let signature = dict["signature"] as? String,
             let height = dict["height"] as? Int,
-            let payload = dict["payload"] as? String else {
+            let encoded = dict["payload"] as? String,
+            let payload = Data(base64Encoded: encoded) else {
             return nil
         }
         
@@ -137,7 +138,7 @@ open class Block: Object {
         self.time = time
         self.signature = signature
         self.height = height
-        self.payload = Base58.decode(payload)!
+        self.payload = payload
         self.chainID = Key.recover(signature: Data(base58: signature)!, message: dataForHashing)
     }
     

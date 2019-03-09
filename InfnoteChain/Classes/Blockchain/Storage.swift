@@ -54,6 +54,10 @@ public class Storage {
             database.add(block)
             getChain(id: block.chainID)?.maxCount += 1
         }
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "[HH:mm:ss.SSS]"
+        let time = dateFormatter.string(from: Date())
+        print("\(time) new block saved")
     }
     
     public func clean(chain: Chain) {
